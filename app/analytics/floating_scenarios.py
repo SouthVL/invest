@@ -100,11 +100,7 @@ def build_floating_scenario_forecast(
 
 
 def find_last_known_coupon(coupons: list[BondCouponScheduleItem], today: date) -> BondCouponScheduleItem | None:
-    known = [
-        coupon
-        for coupon in coupons
-        if coupon.coupon_amount is not None and coupon.coupon_amount > Decimal("0")
-    ]
+    known = [coupon for coupon in coupons if coupon.coupon_amount is not None and coupon.coupon_amount > Decimal("0")]
     past = sorted((coupon for coupon in known if coupon.coupon_date <= today), key=lambda item: item.coupon_date, reverse=True)
     if past:
         return past[0]

@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from app.domain.bond_offer import BondOfferEvent, OfferEventType, OfferStatus
 from app.reporting.offers import OffersAccountReport, build_offers_report
+from app.reporting.serializers.offers_csv import offers_to_csv
 from app.reporting.serializers.offers_json import offers_report_to_json
 
 
@@ -76,3 +77,13 @@ def test_offers_report_summary_counts_warnings() -> None:
     assert payload["summary"]["within_30_days"] == 1
     assert payload["summary"]["warnings_count"] == 1
     assert payload["warnings"] == ["Demo Callable Bond: call in 19 days"]
+
+
+def test_offers_csv_has_stable_header_and_source_status() -> None:
+    csv_text = offers_to_csv(report())
+
+    assert (
+        csv_text.splitlines()[0]
+        == "account_label,offer_date,event_type,instrument_name,isin,figi,quantity,days_until_offer,status,source_status"
+    )
+    assert "account_1,2026-07-20,call,Demo Callable Bond,RU000A,figi-1,10,19,warning,actual" in csv_text

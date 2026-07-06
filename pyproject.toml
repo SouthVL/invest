@@ -36,7 +36,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
+  "mypy>=1.10,<2",
   "pytest>=8,<9",
+  "ruff>=0.5,<1",
+  "types-PyYAML>=6,<7",
 ]
 
 [project.urls]
@@ -53,3 +56,25 @@ include = ["invest_bonds*", "app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+follow_imports = "skip"
+check_untyped_defs = false
+warn_unused_ignores = false
+no_strict_optional = true
+disable_error_code = [
+  "var-annotated",
+]
+exclude = [
+  "external_api/",
+]

@@ -1,9 +1,20 @@
-RU000A10XXXX:
-  index: key_rate
-  spread_bps: 130
-  coupon_period_days: 91
-  lag_days: 0
-  floor_rate_bps: null
-  cap_rate_bps: null
-  confidence: high
-  source: manual
+formulas:
+  RU000A10XXXX:
+    isin: RU000A10XXXX
+    name: Example key-rate floater
+    index: key_rate
+    base_index: key_rate
+    spread_bps: 130
+    day_count: ACT/365
+    coupon_period_days: 91
+    lag_days: 0
+    floor_rate_bps: null
+    cap_rate_bps: null
+    source:
+      title: Manual formula entry
+      url: null
+    verified_at: 2026-07-06
+    comment: Example formula used in tests and local demonstrations.
+    status: active
+    data_quality_status: manual
+    confidence: high

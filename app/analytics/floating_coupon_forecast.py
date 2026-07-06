@@ -2,17 +2,27 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import TypedDict
 
 from app.analytics.cashflow_forecast import _add_months
 from app.domain.bond_position import BondPosition
 from app.domain.floating_coupon import (
     CouponForecastSource,
+    FormulaDataQuality,
     FloatingCouponForecastEvent,
     FloatingCouponFormula,
     FloatingRateIndex,
     MonthlyFloatingCouponForecast,
     RateScenario,
+    VersionedStatus,
 )
+
+
+class MonthlyFloatingBucket(TypedDict):
+    actual: Decimal
+    forecast: Decimal
+    unknown: int
+    currency: str
 
 
 def calculate_floating_coupon_per_bond(
@@ -49,7 +59,12 @@ def build_floating_coupon_forecast(
             if coupon.coupon_date < start_date or coupon.coupon_date >= window_end:
                 continue
             formula = formulas_by_isin.get(position.isin)
-            period_days = coupon.coupon_period_days or _estimate_coupon_period_days(sorted_coupons, index) or (formula.coupon_period_days if formula else None) or 91
+            period_days = (
+                coupon.coupon_period_days
+                or _estimate_coupon_period_days(sorted_coupons, index)
+                or (formula.coupon_period_days if formula else None)
+                or 91
+            )
 
             if coupon.coupon_amount is not None:
                 total = coupon.coupon_amount * position.quantity
@@ -72,7 +87,7 @@ def build_floating_coupon_forecast(
                 )
                 continue
 
-            if formula is None:
+            if formula is None or not formula_is_usable(formula):
                 events.append(_unknown_event(position, coupon.coupon_date, period_days))
                 continue
 
@@ -126,7 +141,7 @@ def aggregate_monthly_floating_forecast(
     start_month = date(start_date.year, start_date.month, 1)
     month_keys = [_month_key(_add_months(start_month, offset)) for offset in range(months)]
     window_end = _add_months(start_month, months)
-    buckets = {
+    buckets: dict[str, MonthlyFloatingBucket] = {
         month: {
             "actual": Decimal("0"),
             "forecast": Decimal("0"),
@@ -183,6 +198,10 @@ def _unknown_event(
         coupon_period_days=period_days,
         currency=position.currency,
     )
+
+
+def formula_is_usable(formula: FloatingCouponFormula) -> bool:
+    return formula.status == VersionedStatus.ACTIVE and formula.data_quality_status != FormulaDataQuality.UNKNOWN
 
 
 def _estimate_coupon_period_days(coupons, index: int) -> int | None:

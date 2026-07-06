@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 
-from app.interfaces.cli.commands import cashflow, demo, floaters, offers, portfolio
+from app.interfaces.cli.commands import cashflow, demo, floaters, offers, portfolio, report
 from app.interfaces.cli.parser import build_parser
 from invest_bonds.cli import main as legacy_portfolio_main
 
@@ -18,6 +18,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if handler == "cashflow":
         return cashflow.run(args)
+    if handler == "report":
+        return report.run(args)
     if handler == "portfolio_snapshot":
         return portfolio.run_snapshot(args)
     if handler == "floaters_forecast":
@@ -28,6 +30,8 @@ def main(argv: list[str] | None = None) -> int:
         return offers.run(args)
     if handler == "demo_cashflow":
         return demo.run_cashflow(args)
+    if handler == "demo_report":
+        return report.run_demo(args)
 
     parser.print_help()
     return 2

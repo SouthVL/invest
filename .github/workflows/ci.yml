@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]" --extra-index-url https://opensource.tbank.ru/api/v4/projects/238/packages/pypi/simple
+
+      - name: Ruff lint
+        run: python -m ruff check .
+
+      - name: Ruff format check
+        run: python -m ruff format --check .
+
+      - name: Type check
+        run: python -m mypy app tests
+
+      - name: Test
+        run: python -m pytest
+
+      - name: Demo smoke test
+        run: python -m app.interfaces.cli.main demo cashflow --months 1 --format json
+
+      - name: Report generation smoke test
+        run: python -m app.interfaces.cli.main demo report --months 12 --output /tmp/south-invest-report-ci --anonymize
+
+      - name: Secret scan
+        run: python scripts/check_no_secrets.py

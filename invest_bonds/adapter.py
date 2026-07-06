@@ -94,9 +94,7 @@ class TInvestAdapter:
 
         instrument_id = getattr(position, "instrument_uid", "") or getattr(position, "figi", "")
         id_type = (
-            InstrumentIdType.INSTRUMENT_ID_TYPE_UID
-            if getattr(position, "instrument_uid", "")
-            else InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI
+            InstrumentIdType.INSTRUMENT_ID_TYPE_UID if getattr(position, "instrument_uid", "") else InstrumentIdType.INSTRUMENT_ID_TYPE_FIGI
         )
         bond_response = client.instruments.bond_by(id_type=id_type, id=instrument_id)
         bond = bond_response.instrument

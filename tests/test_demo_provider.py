@@ -2,7 +2,8 @@ import json
 from datetime import date
 from decimal import Decimal
 
-from app.demo.provider import DEMO_AS_OF, build_demo_cashflow_report
+from app.demo.provider import DEMO_AS_OF, build_demo_cashflow_report, build_demo_offers_report
+from app.domain.bond_offer import OfferEventType
 from app.domain.cashflow import CashflowType
 from app.reporting.serializers.cashflow_json import cashflow_report_to_json
 
@@ -60,3 +61,13 @@ def test_demo_cashflow_events_are_limited_to_forecast_window() -> None:
 
     assert [event.name for event in report.accounts[0].events] == ["Demo Government Fixed Bond"]
     assert report.summary.total == Decimal("350.00")
+
+
+def test_demo_offers_are_deterministic_and_offline() -> None:
+    first = build_demo_offers_report(days=180)
+    second = build_demo_offers_report(days=180)
+
+    assert first == second
+    assert first.as_of == DEMO_AS_OF
+    assert first.accounts[0].offers[0].event_type == OfferEventType.CALL
+    assert first.summary["total_offers"] == 2

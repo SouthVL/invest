@@ -9,9 +9,11 @@ from app.analytics.floating_coupon_forecast import (
 from app.domain.bond_position import BondCouponScheduleItem, BondPosition
 from app.domain.floating_coupon import (
     CouponForecastSource,
+    FormulaDataQuality,
     FloatingCouponFormula,
     FloatingRateIndex,
     RateScenario,
+    VersionedStatus,
 )
 
 
@@ -125,6 +127,32 @@ def test_produces_unknown_when_scenario_rate_is_missing() -> None:
 
     assert events[0].source == CouponForecastSource.UNKNOWN
     assert events[0].index == FloatingRateIndex.KEY_RATE
+
+
+def test_produces_unknown_when_formula_is_not_active() -> None:
+    events = build_floating_coupon_forecast(
+        bond_positions=[position()],
+        formulas_by_isin={"RU000A": formula(status=VersionedStatus.DRAFT)},
+        scenario=scenario(),
+        start_date=date(2026, 5, 1),
+        months=1,
+    )
+
+    assert events[0].source == CouponForecastSource.UNKNOWN
+    assert events[0].total_coupon is None
+
+
+def test_produces_unknown_when_formula_quality_is_unknown() -> None:
+    events = build_floating_coupon_forecast(
+        bond_positions=[position()],
+        formulas_by_isin={"RU000A": formula(data_quality_status=FormulaDataQuality.UNKNOWN)},
+        scenario=scenario(),
+        start_date=date(2026, 5, 1),
+        months=1,
+    )
+
+    assert events[0].source == CouponForecastSource.UNKNOWN
+    assert events[0].total_coupon is None
 
 
 def test_aggregates_actual_and_forecast_coupons_separately() -> None:

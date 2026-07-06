@@ -753,10 +753,7 @@ def combine_monthly_cashflows(
             dividends=totals[month]["dividends"],
             amortizations=totals[month]["amortizations"],
             maturities=totals[month]["maturities"],
-            total=totals[month]["coupons"]
-            + totals[month]["dividends"]
-            + totals[month]["amortizations"]
-            + totals[month]["maturities"],
+            total=totals[month]["coupons"] + totals[month]["dividends"] + totals[month]["amortizations"] + totals[month]["maturities"],
             currency=currency,
         )
         for month in sorted(month_order)

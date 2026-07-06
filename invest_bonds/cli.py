@@ -10,16 +10,14 @@ from rich.console import Console
 from invest_bonds.adapter import TInvestAdapter
 from invest_bonds.config import ConfigError, load_settings
 from invest_bonds.models import AccountSummary, BondSnapshot
-from invest_bonds.render import render_accounts, render_bonds
+from invest_bonds.render import render_bonds
 from invest_bonds.storage import SnapshotRepository
 
 
 class PortfolioAdapter(Protocol):
-    def get_accounts(self) -> list[AccountSummary]:
-        ...
+    def get_accounts(self) -> list[AccountSummary]: ...
 
-    def fetch_snapshot(self, *, account_id: str, as_of: date, lookahead_days: int) -> BondSnapshot:
-        ...
+    def fetch_snapshot(self, *, account_id: str, as_of: date, lookahead_days: int) -> BondSnapshot: ...
 
 
 def build_parser() -> argparse.ArgumentParser:

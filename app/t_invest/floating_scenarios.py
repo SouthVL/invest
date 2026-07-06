@@ -79,6 +79,7 @@ class TInvestFloatingScenarioService:
             currency=(money_currency(getattr(coupon, "pay_one_bond", None)) or getattr(bond, "currency", None) or "RUB").upper(),
         )
 
+
 def _day_start(value: date) -> datetime:
     return datetime.combine(value, time.min, tzinfo=timezone.utc)
 

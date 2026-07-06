@@ -1307,3 +1307,62 @@ south-invest report --months 12 --output report/
 * `portfolio snapshot` и `floaters` всё ещё не имеют JSON/CSV.
 * Ошибки в JSON-режиме для `cashflow` и `offers` пока не возвращаются structured JSON object.
 * `report` команда и единый пакет файлов отчёта пока не реализованы.
+
+## После этапа 5. MVP report package
+
+* `south-invest report` и `south-invest demo report` создают законченный локальный каталог отчёта с
+  `manifest.json`, `summary.json`, cashflow/offers JSON/CSV, `data_quality.json`, `report.html` и SVG-графиками.
+* Demo provider теперь включает synthetic offers для offline report.
+* `docs/methodology.md` добавлен, но методология пока описывает текущий MVP, а не полноценный formula registry.
+* `portfolio.json` и `portfolio.csv` в report package пока являются честным placeholder со статусом `unknown`;
+  полноценный holdings snapshot нужно подключать отдельным этапом.
+* `floating_scenarios.json/csv` пока строятся только из текущих floating cashflow events; полноценный экспорт матрицы
+  base/stress/up/down ещё не подключён к report package.
+* SVG-графики реализованы без внешних зависимостей и подходят для MVP, но ещё не имеют продвинутой визуальной маркировки
+  `actual/forecast/unknown` на уровне каждого сегмента monthly stacked bar.
+* `--anonymize` скрывает account IDs, FIGI/ISIN и названия инструментов в report output, но пока не поддерживает
+  настраиваемые псевдонимы пользователя.
+* Top-level `report` для T-Invest последовательно вызывает cashflow и offers builders; полноценный provider/ports слой
+  всё ещё не выделен.
+* Ошибки report-команды пока возвращаются terminal text, а не structured JSON error.
+
+## После этапа 6. Версионирование формул и сценариев
+
+* `RateScenario` теперь хранит `id`, описание, статус, даты, автора, источник, рынок/валюту, диапазон и допущения.
+* `FloatingCouponFormula` теперь хранит название, base index, day count, источник, дату проверки, комментарий, статус и
+  качество данных.
+* Встроенные `app/data/rate_scenarios.yaml` и `app/data/floating_coupon_formulas.yaml` переведены на версионированный
+  формат, loader сохраняет совместимость со старым YAML.
+* Forecast больше не использует формулу, если она не `active` или имеет `data_quality_status: unknown`; такие будущие
+  купоны остаются `unknown`.
+* `docs/formulas-and-scenarios.md` описывает контракт YAML.
+* Полноценный schema registry для scenario/formula contracts ещё не добавлен.
+* Нет отдельной CLI-команды для валидации YAML без запуска T-Invest forecast.
+* `floating_scenarios` legacy-команда всё ещё строит простые +/- сценарии от последнего купона и пока не использует
+  версионированные YAML-сценарии.
+* Report package пока не экспортирует полную матрицу всех rate scenarios; это нужно связать отдельной итерацией.
+
+## После этапа 7. CI, качество и безопасность
+
+* Добавлен GitHub Actions workflow `.github/workflows/ci.yml`: Python 3.12, install, Ruff lint, Ruff format check,
+  mypy, pytest, demo cashflow smoke, demo report smoke, secret scan.
+* В `pyproject.toml` добавлены dev dependencies `ruff`, `mypy`, `types-PyYAML` и минимальные настройки качества.
+* Добавлен `scripts/check_no_secrets.py`, который проверяет tracked files на `.env`, SQLite/DB и явные секретные
+  значения.
+* `.gitignore` уже закрывает `.env`, `.env.*`, SQLite/DB, virtualenv, кэш, логи и локальные экспорты.
+* Ruff включён в минимальном режиме `E/F`; import sorting, bugbear и upgrade rules пока не включены, чтобы не смешивать
+  этап CI с большим стилевым refactor.
+* mypy работает в мягком режиме без `check_untyped_defs`; усиление типизации нужно делать постепенно.
+* Secret scan является базовой регулярной проверкой, а не полноценной заменой gitleaks/trufflehog.
+* SDK exceptions всё ещё не проходят отдельную централизованную sanitation-обработку.
+* Report directories не добавлены отдельным шаблоном в `.gitignore`; сейчас локальные CSV/DB/secret files закрыты, но
+  публикационные HTML/JSON отчёты требуют дисциплины пользователя или отдельной политики именования.
+
+## После этапа 8. Контракт для контент-агента
+
+* Добавлен `docs/content-agent-contract.md`.
+* Документ объясняет, какие JSON читать, как цитировать дату данных, как различать actual/forecast/unknown, почему
+  амортизации и погашения нельзя называть доходом, и как отличать оферту от погашения.
+* Добавлен пример запроса для Telegram-поста, Shorts, инфографики и заголовков.
+* Контракт пока является документацией, а не machine-enforced policy; автоматической проверки LLM-вывода нет.
+* Нет JSON schema/docs bundle, который контент-агент мог бы загружать автоматически вместе с report package.

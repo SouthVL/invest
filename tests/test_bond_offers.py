@@ -92,9 +92,7 @@ def test_api_failure_for_one_bond_does_not_stop_processing() -> None:
         def bond_by(self, **kwargs):
             if kwargs["id"] == "bad":
                 raise RuntimeError("boom")
-            return SimpleNamespace(
-                instrument=SimpleNamespace(uid="ok", figi="ok", isin="RU000B", name="Bond B")
-            )
+            return SimpleNamespace(instrument=SimpleNamespace(uid="ok", figi="ok", isin="RU000B", name="Bond B"))
 
         def get_bond_events(self, request):
             return SimpleNamespace(

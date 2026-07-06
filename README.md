@@ -55,8 +55,8 @@ t-invest-bonds
 Legacy module commands such as `python -m app.cli cashflow` and old aliases such as `south-invest portfolio-all` still
 work during migration, but new examples use the canonical `south-invest` command tree.
 
-JSON/CSV export is currently available for cashflow. Full report generation is planned in the migration roadmap and is
-not yet available in this release.
+JSON/CSV export is available for cashflow, and `south-invest report` can generate a local report package with
+machine-readable files, SVG charts, and an offline HTML report.
 
 ## Try Without A Broker Account
 
@@ -71,6 +71,12 @@ Machine-readable demo output:
 ```bash
 south-invest demo cashflow --months 12 --format json
 south-invest demo cashflow --months 12 --format csv --output demo-cashflow/
+```
+
+Complete demo report package:
+
+```bash
+south-invest demo report --months 12 --output demo-report/
 ```
 
 The demo portfolio is synthetic and educational. It includes fixed coupons, a floating coupon estimate, a dividend,
@@ -182,6 +188,48 @@ CSV directory output creates:
 
 - `cashflow_monthly.csv`
 - `cashflow_events.csv`
+
+## Complete Report Package
+
+Generate a local analytics package for a T-Invest portfolio:
+
+```bash
+south-invest report --months 12 --output report/
+```
+
+For a single account:
+
+```bash
+south-invest report --account-id YOUR_ACCOUNT_ID --months 12 --currency RUB --output report/
+```
+
+For publication screenshots or content work, hide account IDs and instrument identifiers:
+
+```bash
+south-invest report --months 12 --output report/ --anonymize
+```
+
+The report command creates:
+
+- `manifest.json`
+- `summary.json`
+- `portfolio.json` and `portfolio.csv`
+- `cashflow_monthly.json` and `cashflow_monthly.csv`
+- `cashflow_events.json` and `cashflow_events.csv`
+- `maturities.csv`
+- `offers.json` and `offers.csv`
+- `floating_scenarios.json` and `floating_scenarios.csv`
+- `data_quality.json`
+- `report.html`
+- SVG charts in `charts/`
+
+`report.html` opens locally without a server, external JavaScript, or external fonts. Current report package generation
+uses the cashflow and offers data already available in the application; full portfolio holdings and full floating-rate
+scenario matrices are still marked as report MVP limitations.
+
+Methodology is documented in `docs/methodology.md`. Floating formula and scenario YAML contracts are documented in
+`docs/formulas-and-scenarios.md`. Content-agent rules for Telegram, Shorts, and infographic generation are documented in
+`docs/content-agent-contract.md`.
 
 Real account IDs are excluded from machine-readable output by default. Add `--include-account-id` only when you
 explicitly want to include them:

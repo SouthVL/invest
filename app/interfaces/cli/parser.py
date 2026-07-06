@@ -14,6 +14,7 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command")
 
     _add_cashflow(subparsers)
+    _add_report(subparsers)
     _add_portfolio(subparsers)
     _add_floaters(subparsers)
     _add_offers(subparsers)
@@ -37,6 +38,24 @@ def _add_cashflow(subparsers: argparse._SubParsersAction) -> None:
         action="store_true",
         help="For floating-rate bonds, use the last known coupon amount when a future coupon amount is missing.",
     )
+
+
+def _add_report(subparsers: argparse._SubParsersAction) -> None:
+    report = subparsers.add_parser("report", help="Generate a complete local analytics report package.")
+    report.set_defaults(handler="report")
+    report.add_argument("--account-id", help="T-Invest account id to fetch. If omitted, all accounts are processed.")
+    report.add_argument("--months", type=int, default=12, help="Number of forecast months.")
+    report.add_argument("--as-of", type=parse_cli_date, default=date.today(), help="Report start date as DD.MM.YYYY.")
+    report.add_argument("--currency", default="RUB", help="Report currency. Defaults to RUB.")
+    report.add_argument("--output", type=Path, required=True, help="Output report directory.")
+    report.add_argument("--scenario", default="base", help="Scenario label stored in manifest and report files.")
+    report.add_argument("--offer-days", type=int, help="Offer lookup window in days. Defaults to months * 31.")
+    report.add_argument("--warning-days", type=int, default=45, help="Mark offers within this many days as WARNING.")
+    report.add_argument(
+        "--repeat-floating-last-coupon", action="store_true", help="Repeat last known floater coupon when future amount is missing."
+    )
+    report.add_argument("--include-account-id", action="store_true", help="Include real T-Invest account IDs in report data.")
+    report.add_argument("--anonymize", action="store_true", help="Hide account IDs and instrument identifiers for publication.")
 
 
 def _add_portfolio(subparsers: argparse._SubParsersAction) -> None:
@@ -99,6 +118,17 @@ def _add_demo(subparsers: argparse._SubParsersAction) -> None:
     cashflow.add_argument("--currency", default="RUB", help="Report currency. Defaults to RUB.")
     cashflow.add_argument("--format", choices=["table", "json", "csv"], default="table", help="Output format.")
     cashflow.add_argument("--output", type=Path, help="Output file or directory.")
+
+    report = demo_subparsers.add_parser("report", help="Generate a complete deterministic demo report package.")
+    report.set_defaults(handler="demo_report")
+    report.add_argument("--months", type=int, default=12, help="Number of forecast months.")
+    report.add_argument("--as-of", type=parse_cli_date, default=DEMO_AS_OF, help="Report start date as DD.MM.YYYY.")
+    report.add_argument("--currency", default="RUB", help="Report currency. Defaults to RUB.")
+    report.add_argument("--output", type=Path, required=True, help="Output report directory.")
+    report.add_argument("--scenario", default="base", help="Scenario label stored in manifest and report files.")
+    report.add_argument("--offer-days", type=int, help="Offer lookup window in days. Defaults to months * 31.")
+    report.add_argument("--warning-days", type=int, default=45, help="Mark offers within this many days as WARNING.")
+    report.add_argument("--anonymize", action="store_true", help="Hide account IDs and instrument identifiers for publication.")
 
 
 def _add_legacy_aliases(subparsers: argparse._SubParsersAction) -> None:

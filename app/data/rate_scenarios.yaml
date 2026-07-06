@@ -1,33 +1,83 @@
 scenarios:
   flat:
-    key_rate:
-      2026-05: 16.00
-      2026-06: 16.00
-      2026-07: 16.00
-      2026-08: 16.00
-      2026-09: 16.00
-      2026-10: 16.00
-      2026-11: 16.00
-      2026-12: 16.00
+    id: cb-key-rate-flat-2026-05
+    name: Flat key-rate scenario
+    description: Editorial scenario with unchanged key rate over the forecast window.
+    status: active
+    created_at: 2026-07-06
+    updated_at: 2026-07-06
+    author: Cooperative South
+    source:
+      title: Manual editorial scenario
+      url: null
+    market: RU
+    currency: RUB
+    time_range: 2026-05..2026-12
+    assumptions:
+      - Key rate stays unchanged for the whole modeled period.
+    rates:
+      key_rate:
+        2026-05: 16.00
+        2026-06: 16.00
+        2026-07: 16.00
+        2026-08: 16.00
+        2026-09: 16.00
+        2026-10: 16.00
+        2026-11: 16.00
+        2026-12: 16.00
 
   base:
-    key_rate:
-      2026-05: 16.00
-      2026-06: 15.50
-      2026-07: 15.00
-      2026-08: 14.50
-      2026-09: 14.00
-      2026-10: 13.50
-      2026-11: 13.00
-      2026-12: 13.00
+    id: cb-key-rate-base-2026-05
+    name: Base key-rate scenario
+    description: Editorial scenario with gradual key-rate easing.
+    status: active
+    created_at: 2026-07-06
+    updated_at: 2026-07-06
+    author: Cooperative South
+    source:
+      title: Manual editorial scenario
+      url: null
+    market: RU
+    currency: RUB
+    time_range: 2026-05..2026-12
+    assumptions:
+      - Gradual easing over the forecast window.
+      - Monthly rates are scenario inputs, not official forecasts.
+    rates:
+      key_rate:
+        2026-05: 16.00
+        2026-06: 15.50
+        2026-07: 15.00
+        2026-08: 14.50
+        2026-09: 14.00
+        2026-10: 13.50
+        2026-11: 13.00
+        2026-12: 13.00
 
   stress:
-    key_rate:
-      2026-05: 17.00
-      2026-06: 17.00
-      2026-07: 18.00
-      2026-08: 18.00
-      2026-09: 18.00
-      2026-10: 18.00
-      2026-11: 18.00
-      2026-12: 18.00
+    id: cb-key-rate-stress-2026-05
+    name: Stress key-rate scenario
+    description: Editorial scenario with elevated key rate.
+    status: active
+    created_at: 2026-07-06
+    updated_at: 2026-07-06
+    author: Cooperative South
+    source:
+      title: Manual editorial scenario
+      url: null
+    market: RU
+    currency: RUB
+    time_range: 2026-05..2026-12
+    assumptions:
+      - Higher-for-longer key-rate path.
+      - Monthly rates are scenario inputs, not official forecasts.
+    rates:
+      key_rate:
+        2026-05: 17.00
+        2026-06: 17.00
+        2026-07: 18.00
+        2026-08: 18.00
+        2026-09: 18.00
+        2026-10: 18.00
+        2026-11: 18.00
+        2026-12: 18.00

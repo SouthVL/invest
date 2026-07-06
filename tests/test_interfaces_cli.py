@@ -4,6 +4,7 @@ import app.interfaces.cli.commands.cashflow as cashflow_command
 import app.interfaces.cli.commands.floaters as floaters_command
 import app.interfaces.cli.commands.offers as offers_command
 import app.interfaces.cli.commands.portfolio as portfolio_command
+import app.interfaces.cli.commands.report as report_command
 import app.interfaces.cli.main as cli_main
 from app.interfaces.cli.main import main
 from app.interfaces.cli.parser import build_parser
@@ -15,6 +16,7 @@ def test_parser_exposes_canonical_commands() -> None:
     help_text = build_parser().format_help()
 
     assert "cashflow" in help_text
+    assert "report" in help_text
     assert "portfolio" in help_text
     assert "floaters" in help_text
     assert "offers" in help_text
@@ -232,6 +234,60 @@ def test_offers_json_format_writes_output(monkeypatch, tmp_path) -> None:
 
     assert code == 0
     assert '"schema_version": "1.0"' in output.read_text(encoding="utf-8")
+
+
+def test_report_command_writes_package(monkeypatch, tmp_path) -> None:
+    cashflow_calls = []
+    offers_calls = []
+
+    def fake_cashflow_report(request):
+        cashflow_calls.append(request)
+        return build_cashflow_report(
+            as_of=request.as_of,
+            months=request.months,
+            report_currency=request.report_currency,
+            account_results=[CashflowAccountReport(account_label="account_1")],
+            generated_at=request.generated_at,
+        )
+
+    def fake_offers_report(request):
+        offers_calls.append(request)
+        return build_offers_report(
+            as_of=request.as_of,
+            days=request.days,
+            warning_days=request.warning_days,
+            account_results=[OffersAccountReport(account_label="account_1")],
+            generated_at=request.generated_at,
+        )
+
+    monkeypatch.setattr(report_command, "build_t_invest_cashflow_report", fake_cashflow_report)
+    monkeypatch.setattr(report_command, "build_t_invest_offers_report", fake_offers_report)
+
+    code = main(["report", "--months", "2", "--as-of", "27.04.2026", "--output", str(tmp_path), "--anonymize"])
+
+    assert code == 0
+    assert cashflow_calls[0].months == 2
+    assert cashflow_calls[0].include_account_id is False
+    assert offers_calls[0].days == 62
+    assert (tmp_path / "manifest.json").exists()
+    assert (tmp_path / "report.html").exists()
+
+
+def test_demo_report_does_not_call_t_invest_builders(monkeypatch, tmp_path) -> None:
+    def fail_cashflow(request):
+        raise AssertionError("T-Invest cashflow builder must not be called for demo report")
+
+    def fail_offers(request):
+        raise AssertionError("T-Invest offers builder must not be called for demo report")
+
+    monkeypatch.setattr(report_command, "build_t_invest_cashflow_report", fail_cashflow)
+    monkeypatch.setattr(report_command, "build_t_invest_offers_report", fail_offers)
+
+    code = main(["demo", "report", "--months", "12", "--output", str(tmp_path)])
+
+    assert code == 0
+    assert (tmp_path / "manifest.json").exists()
+    assert '"mode": "demo"' in (tmp_path / "manifest.json").read_text(encoding="utf-8")
 
 
 def test_parser_converts_dates() -> None:

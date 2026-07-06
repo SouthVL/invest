@@ -76,9 +76,7 @@ def build_cashflow_report(
         data_quality={
             "account_count": len(account_results),
             "event_count": sum(len(account.events) for account in account_results),
-            "source_statuses": sorted(
-                {source_status(event.source) for account in account_results for event in account.events}
-            ),
+            "source_statuses": sorted({source_status(event.source) for account in account_results for event in account.events}),
         },
     )
 

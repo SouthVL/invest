@@ -22,11 +22,7 @@ def filter_and_sort_offers(
 ) -> list[BondOfferEvent]:
     window_end = as_of.toordinal() + days
     return sorted(
-        (
-            offer
-            for offer in offers
-            if offer.days_until_offer >= 0 and offer.offer_date.toordinal() <= window_end
-        ),
+        (offer for offer in offers if offer.days_until_offer >= 0 and offer.offer_date.toordinal() <= window_end),
         key=lambda offer: (offer.offer_date, offer.name),
     )
 

@@ -4,8 +4,10 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from app.analytics.cashflow_forecast import _add_months, build_monthly_cashflow
+from app.domain.bond_offer import BondOfferEvent, OfferEventType, OfferStatus
 from app.domain.cashflow import CashflowEvent, CashflowSource, CashflowType
 from app.reporting.cashflow import CashflowAccountReport, CashflowReport, build_cashflow_report
+from app.reporting.offers import OffersAccountReport, OffersReport, build_offers_report
 
 DEMO_AS_OF = date(2026, 7, 1)
 DEMO_GENERATED_AT = datetime(2026, 7, 1, 12, 0, tzinfo=timezone.utc)
@@ -34,6 +36,33 @@ def build_demo_cashflow_report(
                 account_label=DEMO_ACCOUNT_LABEL,
                 monthly=rows,
                 events=events,
+            )
+        ],
+        generated_at=DEMO_GENERATED_AT,
+    )
+
+
+def build_demo_offers_report(
+    *,
+    as_of: date = DEMO_AS_OF,
+    days: int = 180,
+    warning_days: int = 45,
+) -> OffersReport:
+    if days < 1:
+        raise ValueError("--days must be at least 1")
+    if warning_days < 0:
+        raise ValueError("--warning-days must be non-negative")
+
+    to_date = date.fromordinal(as_of.toordinal() + days)
+    offers = [offer for offer in demo_offer_events(as_of=as_of, warning_days=warning_days) if as_of <= offer.offer_date <= to_date]
+    return build_offers_report(
+        as_of=as_of,
+        days=days,
+        warning_days=warning_days,
+        account_results=[
+            OffersAccountReport(
+                account_label=DEMO_ACCOUNT_LABEL,
+                offers=offers,
             )
         ],
         generated_at=DEMO_GENERATED_AT,
@@ -171,6 +200,65 @@ def demo_cashflow_events() -> list[CashflowEvent]:
             source=CashflowSource.ACTUAL,
         ),
     ]
+
+
+def demo_offer_events(*, as_of: date = DEMO_AS_OF, warning_days: int = 45) -> list[BondOfferEvent]:
+    return [
+        demo_offer(
+            instrument_uid="demo-corp-fixed",
+            figi="DEMOFIGI002",
+            isin="DEMO000002",
+            name="Demo Corporate Fixed Bond",
+            offer_date=date(2026, 9, 20),
+            event_type=OfferEventType.CALL,
+            quantity=Decimal("8"),
+            as_of=as_of,
+            warning_days=warning_days,
+        ),
+        demo_offer(
+            instrument_uid="demo-amortizing",
+            figi="DEMOFIGI005",
+            isin="DEMO000005",
+            name="Demo Amortizing Bond",
+            offer_date=date(2026, 12, 1),
+            event_type=OfferEventType.OFFER,
+            quantity=Decimal("5"),
+            as_of=as_of,
+            warning_days=warning_days,
+        ),
+    ]
+
+
+def demo_offer(
+    *,
+    instrument_uid: str,
+    figi: str,
+    isin: str,
+    name: str,
+    offer_date: date,
+    event_type: OfferEventType,
+    quantity: Decimal,
+    as_of: date,
+    warning_days: int,
+) -> BondOfferEvent:
+    days_until_offer = offer_date.toordinal() - as_of.toordinal()
+    if days_until_offer < 0:
+        status = OfferStatus.EXPIRED
+    elif days_until_offer <= warning_days:
+        status = OfferStatus.WARNING
+    else:
+        status = OfferStatus.OK
+    return BondOfferEvent(
+        instrument_uid=instrument_uid,
+        figi=figi,
+        isin=isin,
+        name=name,
+        offer_date=offer_date,
+        event_type=event_type,
+        quantity=quantity,
+        days_until_offer=days_until_offer,
+        status=status,
+    )
 
 
 def filter_events_for_window(events: list[CashflowEvent], *, as_of: date, months: int) -> list[CashflowEvent]:
