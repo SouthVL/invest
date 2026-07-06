@@ -1,0 +1,61 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+.netrc
+.pypirc
+
+# Local runtime data
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sqlite-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS/editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and local exports
+*.log
+*.csv
+*.xlsx
+
+# External API samples and generated artifacts
+external_api/
+external_api/*.zip
+external_api/*.rar
+external_api/**/bin/
+external_api/**/obj/
+external_api/**/packages/
+external_api/**/*.dll
+external_api/**/*.exe
+external_api/**/*.pdb
+external_api/**/*.suo
+external_api/**/*.user

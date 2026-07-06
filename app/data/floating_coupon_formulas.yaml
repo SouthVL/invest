@@ -1,0 +1,9 @@
+RU000A10XXXX:
+  index: key_rate
+  spread_bps: 130
+  coupon_period_days: 91
+  lag_days: 0
+  floor_rate_bps: null
+  cap_rate_bps: null
+  confidence: high
+  source: manual
