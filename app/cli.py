@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -45,6 +46,10 @@ from invest_bonds.sdk_compat import configure_t_invest_sdk
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if not argv or (argv[0].startswith("-") and argv[0] not in {"-h", "--help"}):
+        return portfolio_main(argv)
+
     parser = build_parser()
     args = parser.parse_args(argv)
     console = Console()
@@ -64,7 +69,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="T-Invest bond portfolio tools.")
+    parser = argparse.ArgumentParser(description="Cooperative South Finance Lab portfolio analytics tools.")
     subparsers = parser.add_subparsers(dest="command")
 
     cashflow = subparsers.add_parser("cashflow", help="Show monthly portfolio cashflow forecast.")

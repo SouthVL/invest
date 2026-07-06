@@ -3,10 +3,29 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "t-invest-bond-tracker"
+name = "south-invest"
 version = "0.1.0"
-description = "Read-only T-Invest bond portfolio tracker CLI"
+description = "Read-only portfolio cashflow and bond analytics engine for T-Invest portfolios."
 requires-python = ">=3.12"
+keywords = [
+  "bonds",
+  "portfolio",
+  "cashflow",
+  "fixed-income",
+  "t-invest",
+  "financial-analytics",
+  "investment-tools",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Financial and Insurance Industry",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Office/Business :: Financial :: Investment",
+]
 dependencies = [
   "pydantic>=2,<3",
   "PyYAML>=6,<7",
@@ -20,7 +39,12 @@ dev = [
   "pytest>=8,<9",
 ]
 
+[project.urls]
+Repository = "https://github.com/SouthVL/invest"
+Issues = "https://github.com/SouthVL/invest/issues"
+
 [project.scripts]
+south-invest = "app.interfaces.cli.main:main"
 t-invest-bonds = "invest_bonds.cli:main"
 
 [tool.setuptools.packages.find]

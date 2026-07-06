@@ -3,8 +3,10 @@ from decimal import Decimal
 
 from rich.console import Console
 
+import app.cli as app_cli
 from app.cli import (
     combine_monthly_cashflows,
+    main,
     render_cashflow,
     render_cashflow_details,
     render_floating_scenario_details,
@@ -12,6 +14,21 @@ from app.cli import (
 )
 from app.domain.cashflow import CashflowEvent, CashflowSource, CashflowType, MonthlyCashflow
 from app.domain.floating_scenarios import CouponSource, FloatingScenarioCouponEvent, ScenarioType
+
+
+def test_main_delegates_top_level_legacy_options(monkeypatch) -> None:
+    calls = []
+
+    def fake_portfolio_main(argv):
+        calls.append(argv)
+        return 0
+
+    monkeypatch.setattr(app_cli, "portfolio_main", fake_portfolio_main)
+
+    code = main(["--db-path", "invest.db", "--as-of", "27.04.2026"])
+
+    assert code == 0
+    assert calls == [["--db-path", "invest.db", "--as-of", "27.04.2026"]]
 
 
 def test_render_cashflow_uses_custom_account_title() -> None:

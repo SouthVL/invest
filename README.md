@@ -1,6 +1,93 @@
-# T-Invest Bond Tracker
+# Кооператив Юг - Finance Lab
 
-Read-only CLI for tracking bond positions in a T-Invest portfolio.
+Read-only portfolio cashflow and bond analytics engine for T-Invest portfolios.
+
+Finance Lab is the technical core for the «Кооператив Юг» media direction: an engineering view of money and capital.
+The project focuses on future cashflows, important dates, data sources, uncertainty, and explainable analytics rather
+than trading automation.
+
+## What It Does
+
+- Reads T-Invest portfolio data through a read-only token.
+- Tracks bond positions, coupons, amortizations, maturities, offers/calls, and buybacks.
+- Builds monthly portfolio cashflow from fixed coupons, floating coupons, dividends, amortizations, and maturities.
+- Marks confirmed and estimated values in the terminal output.
+- Converts foreign-currency payments into the report currency for monthly totals.
+- Stores local SQLite snapshots when explicitly running snapshot commands.
+
+## What It Does Not Do
+
+- It is not an investment advisor.
+- It is not a trading robot.
+- It does not place, modify, or cancel orders.
+- It does not request trading permissions.
+- It does not guarantee future payments or forecast accuracy.
+
+## Disclaimer
+
+This software is for personal analytics, research, and educational content workflows. It is not an investment
+recommendation. Forecasts, scenarios, and estimated payments are assumptions, not facts. Data should be checked against
+broker, issuer, exchange, and regulator sources before making financial decisions. You are responsible for your own
+investment decisions.
+
+## Privacy
+
+- The token is read from local `.env` and is not saved to SQLite.
+- Use a read-only T-Invest token.
+- Do not publish terminal output or reports that include real account IDs, positions, quantities, or average purchase
+  prices unless you intend to disclose them.
+- `.env`, local SQLite databases, virtual environments, caches, and external API samples are excluded by `.gitignore`.
+
+## Current Status
+
+The current public CLI command is:
+
+```bash
+south-invest
+```
+
+The legacy command is still available for compatibility:
+
+```bash
+t-invest-bonds
+```
+
+Legacy module commands such as `python -m app.cli cashflow` and old aliases such as `south-invest portfolio-all` still
+work during migration, but new examples use the canonical `south-invest` command tree.
+
+JSON/CSV export is currently available for cashflow. Full report generation is planned in the migration roadmap and is
+not yet available in this release.
+
+## Try Without A Broker Account
+
+Run a deterministic offline demo without `.env`, a broker token, or network access:
+
+```bash
+south-invest demo cashflow --months 12
+```
+
+Machine-readable demo output:
+
+```bash
+south-invest demo cashflow --months 12 --format json
+south-invest demo cashflow --months 12 --format csv --output demo-cashflow/
+```
+
+The demo portfolio is synthetic and educational. It includes fixed coupons, a floating coupon estimate, a dividend,
+amortization, maturity, and a foreign-currency payment converted into RUB. It is not an investment recommendation.
+
+Suggested GitHub repository topics:
+
+```text
+bonds
+portfolio
+cashflow
+fixed-income
+t-invest
+python
+financial-analytics
+investment-tools
+```
 
 ## Install
 
@@ -19,14 +106,14 @@ INVEST_TOKEN=your_read_only_token
 ## Run
 
 ```bash
-t-invest-bonds
+south-invest
 ```
 
 Useful options:
 
 ```bash
-t-invest-bonds --db-path invest.db --lookahead-days 730 --as-of 27.04.2026
-t-invest-bonds --account-id YOUR_ACCOUNT_ID
+south-invest --db-path invest.db --lookahead-days 730 --as-of 27.04.2026
+south-invest --account-id YOUR_ACCOUNT_ID
 ```
 
 The app only reads accounts, portfolio, instruments, coupons, and bond events. It does not place or cancel orders.
@@ -36,13 +123,13 @@ The app only reads accounts, portfolio, instruments, coupons, and bond events. I
 Fetch and store the full current portfolio, not only bonds:
 
 ```bash
-python -m app.cli portfolio-all
+south-invest portfolio snapshot
 ```
 
 For one account:
 
 ```bash
-python -m app.cli portfolio-all --account-id YOUR_ACCOUNT_ID
+south-invest portfolio snapshot --account-id YOUR_ACCOUNT_ID
 ```
 
 The command saves data into SQLite tables `portfolio_snapshots` and `portfolio_assets` and prints:
@@ -59,13 +146,13 @@ Show expected monthly portfolio cashflow from dividends, fixed bond coupons, flo
 maturities:
 
 ```bash
-python -m app.cli cashflow --months 12
+south-invest cashflow --months 12
 ```
 
 Optional deterministic start date:
 
 ```bash
-python -m app.cli cashflow --account-id YOUR_ACCOUNT_ID --months 12 --as-of 27.04.2026
+south-invest cashflow --account-id YOUR_ACCOUNT_ID --months 12 --as-of 27.04.2026
 ```
 
 The forecast prints one row per month and keeps fixed coupons, floating coupons, dividends, amortizations, and maturities
@@ -80,7 +167,27 @@ For floating-rate bonds, future coupon amounts can be estimated from the last kn
 announced the amount yet:
 
 ```bash
-python -m app.cli cashflow --months 12 --repeat-floating-last-coupon
+south-invest cashflow --months 12 --repeat-floating-last-coupon
+```
+
+Machine-readable output is available for cashflow:
+
+```bash
+south-invest cashflow --months 12 --format json
+south-invest cashflow --months 12 --format json --output cashflow.json
+south-invest cashflow --months 12 --format csv --output cashflow/
+```
+
+CSV directory output creates:
+
+- `cashflow_monthly.csv`
+- `cashflow_events.csv`
+
+Real account IDs are excluded from machine-readable output by default. Add `--include-account-id` only when you
+explicitly want to include them:
+
+```bash
+south-invest cashflow --months 12 --format json --include-account-id
 ```
 
 When maturity payments are found, the command also prints a separate `Maturity details` table with payment date, month,
@@ -95,19 +202,19 @@ Forecast coupons for floating-rate bonds using announced T-Invest coupons first,
 rate scenario:
 
 ```bash
-python -m app.cli floating-forecast --account-id YOUR_ACCOUNT_ID --months 12 --scenario base
+south-invest floaters forecast --account-id YOUR_ACCOUNT_ID --months 12 --scenario base
 ```
 
 If `--account-id` is omitted, all accounts are processed:
 
 ```bash
-python -m app.cli floating-forecast --months 12 --scenario base
+south-invest floaters forecast --months 12 --scenario base
 ```
 
 Optional files:
 
 ```bash
-python -m app.cli floating-forecast \
+south-invest floaters forecast \
   --months 12 \
   --scenario stress \
   --formulas app/data/floating_coupon_formulas.yaml \
@@ -135,13 +242,13 @@ then compares three simple scenarios:
 Run for all accounts:
 
 ```bash
-python -m app.cli floating-scenarios --months 12
+south-invest floaters scenarios --months 12
 ```
 
 Run for one account with detailed rows:
 
 ```bash
-python -m app.cli floating-scenarios --account-id YOUR_ACCOUNT_ID --months 12 --delta-percent 1.0 --details
+south-invest floaters scenarios --account-id YOUR_ACCOUNT_ID --months 12 --delta-percent 1.0 --details
 ```
 
 If a future coupon amount is already announced by T-Invest, the command uses that actual amount in all scenarios. It is
@@ -152,15 +259,24 @@ read-only and does not place orders.
 Show upcoming bond offers/calls/buybacks/early redemption events for current portfolio bonds:
 
 ```bash
-python -m app.cli offers --account-id YOUR_ACCOUNT_ID
+south-invest offers --account-id YOUR_ACCOUNT_ID
 ```
 
 For all accounts:
 
 ```bash
-python -m app.cli offers --days 180 --warning-days 45
+south-invest offers --days 180 --warning-days 45
 ```
 
 The command prints offers sorted by nearest date, marks events inside `--warning-days` as `WARNING`, then prints a small
 summary for 30/45/90 day windows and an action-required section for near offers. It is read-only and does not place
 orders.
+
+Machine-readable offers output:
+
+```bash
+south-invest offers --days 180 --format json
+south-invest offers --days 180 --format json --output offers.json
+```
+
+Real account IDs are excluded from JSON by default. Use `--include-account-id` only for private reports.
