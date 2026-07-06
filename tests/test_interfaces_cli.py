@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 import app.interfaces.cli.commands.cashflow as cashflow_command
 import app.interfaces.cli.commands.floaters as floaters_command
@@ -8,8 +9,10 @@ import app.interfaces.cli.commands.report as report_command
 import app.interfaces.cli.main as cli_main
 from app.interfaces.cli.main import main
 from app.interfaces.cli.parser import build_parser
+from app.domain.portfolio_all import PortfolioAsset
 from app.reporting.cashflow import CashflowAccountReport, build_cashflow_report
 from app.reporting.offers import OffersAccountReport, build_offers_report
+from app.reporting.portfolio import PortfolioAccountReport, build_portfolio_report
 
 
 def test_parser_exposes_canonical_commands() -> None:
@@ -239,6 +242,7 @@ def test_offers_json_format_writes_output(monkeypatch, tmp_path) -> None:
 def test_report_command_writes_package(monkeypatch, tmp_path) -> None:
     cashflow_calls = []
     offers_calls = []
+    portfolio_calls = []
 
     def fake_cashflow_report(request):
         cashflow_calls.append(request)
@@ -260,8 +264,35 @@ def test_report_command_writes_package(monkeypatch, tmp_path) -> None:
             generated_at=request.generated_at,
         )
 
+    def fake_portfolio_report(request):
+        portfolio_calls.append(request)
+        return build_portfolio_report(
+            as_of=request.as_of,
+            account_results=[
+                PortfolioAccountReport(
+                    account_label="account_1",
+                    assets=[
+                        PortfolioAsset(
+                            account_id="account-1",
+                            instrument_uid="uid-1",
+                            figi="figi-1",
+                            ticker="BOND",
+                            instrument_type="bond",
+                            name="Bond A",
+                            isin="RU000A",
+                            quantity=Decimal("2"),
+                            current_price=Decimal("101.5"),
+                            price_currency="RUB",
+                        )
+                    ],
+                )
+            ],
+            generated_at=request.generated_at,
+        )
+
     monkeypatch.setattr(report_command, "build_t_invest_cashflow_report", fake_cashflow_report)
     monkeypatch.setattr(report_command, "build_t_invest_offers_report", fake_offers_report)
+    monkeypatch.setattr(report_command, "build_t_invest_portfolio_report", fake_portfolio_report)
 
     code = main(["report", "--months", "2", "--as-of", "27.04.2026", "--output", str(tmp_path), "--anonymize"])
 
@@ -269,8 +300,10 @@ def test_report_command_writes_package(monkeypatch, tmp_path) -> None:
     assert cashflow_calls[0].months == 2
     assert cashflow_calls[0].include_account_id is False
     assert offers_calls[0].days == 62
+    assert portfolio_calls[0].as_of == date(2026, 4, 27)
     assert (tmp_path / "manifest.json").exists()
     assert (tmp_path / "report.html").exists()
+    assert "Instrument 1" in (tmp_path / "portfolio.json").read_text(encoding="utf-8")
 
 
 def test_demo_report_does_not_call_t_invest_builders(monkeypatch, tmp_path) -> None:
@@ -280,8 +313,12 @@ def test_demo_report_does_not_call_t_invest_builders(monkeypatch, tmp_path) -> N
     def fail_offers(request):
         raise AssertionError("T-Invest offers builder must not be called for demo report")
 
+    def fail_portfolio(request):
+        raise AssertionError("T-Invest portfolio builder must not be called for demo report")
+
     monkeypatch.setattr(report_command, "build_t_invest_cashflow_report", fail_cashflow)
     monkeypatch.setattr(report_command, "build_t_invest_offers_report", fail_offers)
+    monkeypatch.setattr(report_command, "build_t_invest_portfolio_report", fail_portfolio)
 
     code = main(["demo", "report", "--months", "12", "--output", str(tmp_path)])
 

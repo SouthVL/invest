@@ -223,9 +223,9 @@ The report command creates:
 - `report.html`
 - SVG charts in `charts/`
 
-`report.html` opens locally without a server, external JavaScript, or external fonts. Current report package generation
-uses the cashflow and offers data already available in the application; full portfolio holdings and full floating-rate
-scenario matrices are still marked as report MVP limitations.
+`report.html` opens locally without a server, external JavaScript, or external fonts. The report package includes
+portfolio holdings, cashflow, offers, data quality, and charts. Full floating-rate scenario matrices are still marked as
+a report MVP limitation.
 
 Methodology is documented in `docs/methodology.md`. Floating formula and scenario YAML contracts are documented in
 `docs/formulas-and-scenarios.md`. Content-agent rules for Telegram, Shorts, and infographic generation are documented in

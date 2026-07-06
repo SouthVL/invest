@@ -18,7 +18,7 @@ Start with these files:
 Optional files:
 
 - `floating_scenarios.json` - current floating coupon scenario markers;
-- `portfolio.json` - portfolio metadata if available;
+- `portfolio.json` - portfolio holdings, instrument types, quantities, prices, market value, and portfolio data quality;
 - `report.html` - human-readable local report;
 - `charts/*.svg` - chart assets for cards and video.
 

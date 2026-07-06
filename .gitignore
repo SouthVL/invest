@@ -46,6 +46,9 @@ env/
 *.log
 *.csv
 *.xlsx
+report/
+report-*/
+cashflow-csv/
 
 # External API samples and generated artifacts
 external_api/

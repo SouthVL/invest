@@ -12,6 +12,7 @@ from typing import Any
 
 from app.domain.bond_offer import BondOfferEvent
 from app.domain.cashflow import CashflowEvent, CashflowType, MonthlyCashflow
+from app.domain.portfolio_all import PortfolioAsset
 from app.reporting.cashflow import (
     SCHEMA_VERSION,
     CashflowAccountReport,
@@ -21,10 +22,13 @@ from app.reporting.cashflow import (
     source_status,
 )
 from app.reporting.offers import OffersAccountReport, OffersReport
+from app.reporting.portfolio import PortfolioAccountReport, PortfolioReport
 from app.reporting.serializers.cashflow_csv import cashflow_events_to_csv, cashflow_monthly_to_csv
 from app.reporting.serializers.cashflow_json import cashflow_report_to_dict, decimal_text, iso_datetime, money
 from app.reporting.serializers.offers_csv import offers_to_csv
 from app.reporting.serializers.offers_json import offers_report_to_dict
+from app.reporting.serializers.portfolio_csv import portfolio_to_csv
+from app.reporting.serializers.portfolio_json import portfolio_report_to_dict
 
 DISCLAIMER = "Forecasts are estimates and are not investment advice."
 REPORT_SCHEMA_VERSION = "1.0"
@@ -42,6 +46,7 @@ def write_report_package(
     output_dir: Path,
     cashflow_report: CashflowReport,
     offers_report: OffersReport,
+    portfolio_report: PortfolioReport | None = None,
     mode: str,
     scenario: str = "base",
     anonymize: bool = False,
@@ -53,11 +58,13 @@ def write_report_package(
     if anonymize:
         cashflow_report = anonymize_cashflow_report(cashflow_report)
         offers_report = anonymize_offers_report(offers_report)
+        if portfolio_report is not None:
+            portfolio_report = anonymize_portfolio_report(portfolio_report)
 
     files: list[Path] = []
     monthly_rows = combine_monthly_rows(cashflow_report.accounts, currency=cashflow_report.report_currency)
     summary = build_summary(cashflow_report, offers_report, monthly_rows)
-    data_quality = build_data_quality(cashflow_report, offers_report, anonymize=anonymize)
+    data_quality = build_data_quality(cashflow_report, offers_report, portfolio_report=portfolio_report, anonymize=anonymize)
 
     def write_text(relative_path: str, content: str) -> None:
         path = output_dir / relative_path
@@ -69,11 +76,16 @@ def write_report_package(
         write_text(relative_path, json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
 
     offers_payload = offers_report_to_dict(offers_report)
+    portfolio_payload = (
+        portfolio_report_to_dict(portfolio_report) if portfolio_report else build_portfolio_placeholder(cashflow_report, mode=mode)
+    )
     charts = build_charts(monthly_rows=monthly_rows, cashflow_report=cashflow_report, offers_report=offers_report)
 
     write_json("summary.json", summary)
-    write_json("portfolio.json", build_portfolio_placeholder(cashflow_report, mode=mode))
-    write_text("portfolio.csv", portfolio_csv(cashflow_report, mode=mode))
+    write_json("portfolio.json", portfolio_payload)
+    write_text(
+        "portfolio.csv", portfolio_to_csv(portfolio_report) if portfolio_report else portfolio_placeholder_csv(cashflow_report, mode=mode)
+    )
     write_json("cashflow_monthly.json", cashflow_monthly_payload(cashflow_report))
     write_text("cashflow_monthly.csv", cashflow_monthly_to_csv(cashflow_report))
     write_json("cashflow_events.json", cashflow_events_payload(cashflow_report))
@@ -228,7 +240,13 @@ def round_ratio(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
 
 
-def build_data_quality(cashflow_report: CashflowReport, offers_report: OffersReport, *, anonymize: bool) -> dict[str, Any]:
+def build_data_quality(
+    cashflow_report: CashflowReport,
+    offers_report: OffersReport,
+    *,
+    portfolio_report: PortfolioReport | None,
+    anonymize: bool,
+) -> dict[str, Any]:
     statuses: dict[str, int] = {}
     for account in cashflow_report.accounts:
         for event in account.events:
@@ -239,8 +257,9 @@ def build_data_quality(cashflow_report: CashflowReport, offers_report: OffersRep
         "anonymized": anonymize,
         "cashflow": cashflow_report.data_quality,
         "offers": offers_report.data_quality,
+        "portfolio": portfolio_report.data_quality if portfolio_report else {"source_status": "unknown", "asset_count": 0},
         "source_status_counts": statuses,
-        "warnings": sorted({*cashflow_report.warnings, *offers_report.warnings}),
+        "warnings": sorted({*cashflow_report.warnings, *offers_report.warnings, *(portfolio_report.warnings if portfolio_report else [])}),
         "limitations": [
             "Future payments can change before the payment date.",
             "Amortizations and maturities are capital return, not investment income.",
@@ -307,7 +326,7 @@ def build_portfolio_placeholder(report: CashflowReport, *, mode: str) -> dict[st
     }
 
 
-def portfolio_csv(report: CashflowReport, *, mode: str) -> str:
+def portfolio_placeholder_csv(report: CashflowReport, *, mode: str) -> str:
     output = StringIO()
     writer = csv.writer(output, lineterminator="\n")
     writer.writerow(["account_label", "mode", "data_status", "note"])
@@ -724,5 +743,38 @@ def anonymize_offer(offer: BondOfferEvent, aliases: dict[str, str]) -> BondOffer
             "figi": None,
             "isin": "",
             "name": aliases[key],
+        }
+    )
+
+
+def anonymize_portfolio_report(report: PortfolioReport) -> PortfolioReport:
+    aliases: dict[str, str] = {}
+    accounts: list[PortfolioAccountReport] = []
+    for account_index, account in enumerate(report.accounts, start=1):
+        assets = [anonymize_portfolio_asset(asset, aliases) for asset in account.assets]
+        accounts.append(
+            account.model_copy(
+                update={
+                    "account_label": f"account_{account_index}",
+                    "account_id": None,
+                    "assets": assets,
+                }
+            )
+        )
+    return report.model_copy(update={"accounts": accounts})
+
+
+def anonymize_portfolio_asset(asset: PortfolioAsset, aliases: dict[str, str]) -> PortfolioAsset:
+    key = asset.instrument_uid or asset.figi or asset.isin or asset.name
+    aliases.setdefault(key, f"Instrument {len(aliases) + 1}")
+    return asset.model_copy(
+        update={
+            "account_id": "",
+            "instrument_uid": f"instrument_{len(aliases)}",
+            "position_uid": "",
+            "figi": "",
+            "ticker": "",
+            "name": aliases[key],
+            "isin": "",
         }
     )

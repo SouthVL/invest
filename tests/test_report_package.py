@@ -1,6 +1,6 @@
 import json
 
-from app.demo.provider import build_demo_cashflow_report, build_demo_offers_report
+from app.demo.provider import build_demo_cashflow_report, build_demo_offers_report, build_demo_portfolio_report
 from app.reporting.report_package import write_report_package
 
 
@@ -9,6 +9,7 @@ def test_report_package_writes_expected_files(tmp_path) -> None:
         output_dir=tmp_path,
         cashflow_report=build_demo_cashflow_report(months=12),
         offers_report=build_demo_offers_report(days=180),
+        portfolio_report=build_demo_portfolio_report(),
         mode="demo",
     )
 
@@ -44,11 +45,13 @@ def test_report_package_manifest_and_summary_are_stable(tmp_path) -> None:
         output_dir=tmp_path,
         cashflow_report=build_demo_cashflow_report(months=12),
         offers_report=build_demo_offers_report(days=180),
+        portfolio_report=build_demo_portfolio_report(),
         mode="demo",
     )
 
     manifest = json.loads((tmp_path / "manifest.json").read_text(encoding="utf-8"))
     summary = json.loads((tmp_path / "summary.json").read_text(encoding="utf-8"))
+    portfolio = json.loads((tmp_path / "portfolio.json").read_text(encoding="utf-8"))
 
     assert manifest["report_id"] == "2026-07-01-demo-001"
     assert manifest["mode"] == "demo"
@@ -60,6 +63,11 @@ def test_report_package_manifest_and_summary_are_stable(tmp_path) -> None:
         {"currency": "RUB", "amount": "5801.00"},
         {"currency": "USD", "amount": "5.00"},
     ]
+    assert portfolio["report_type"] == "portfolio"
+    assert portfolio["summary"]["asset_count"] == 3
+    assert portfolio["summary"]["market_value_by_currency"] == [{"currency": "RUB", "amount": "17615.00"}]
+    assert portfolio["accounts"][0]["assets"][0]["instrument_name"] == "Demo Government Fixed Bond"
+    assert "Portfolio holdings snapshot is not included" not in (tmp_path / "portfolio.csv").read_text(encoding="utf-8")
 
 
 def test_report_package_anonymize_hides_identifiers(tmp_path) -> None:
@@ -67,12 +75,14 @@ def test_report_package_anonymize_hides_identifiers(tmp_path) -> None:
         output_dir=tmp_path,
         cashflow_report=build_demo_cashflow_report(months=12),
         offers_report=build_demo_offers_report(days=180),
+        portfolio_report=build_demo_portfolio_report(),
         mode="demo",
         anonymize=True,
     )
 
     events = (tmp_path / "cashflow_events.json").read_text(encoding="utf-8")
     offers = (tmp_path / "offers.json").read_text(encoding="utf-8")
+    portfolio = (tmp_path / "portfolio.json").read_text(encoding="utf-8")
     data_quality = json.loads((tmp_path / "data_quality.json").read_text(encoding="utf-8"))
 
     assert "DEMOFIGI" not in events
@@ -80,7 +90,11 @@ def test_report_package_anonymize_hides_identifiers(tmp_path) -> None:
     assert "Demo Government Fixed Bond" not in events
     assert "Instrument 1" in events
     assert "DEMOFIGI" not in offers
+    assert "DEMOFIGI" not in portfolio
+    assert "Demo Government Fixed Bond" not in portfolio
+    assert "Instrument 1" in portfolio
     assert data_quality["anonymized"] is True
+    assert data_quality["portfolio"]["asset_count"] == 3
 
 
 def test_report_html_has_no_external_scripts_or_fonts(tmp_path) -> None:
@@ -88,6 +102,7 @@ def test_report_html_has_no_external_scripts_or_fonts(tmp_path) -> None:
         output_dir=tmp_path,
         cashflow_report=build_demo_cashflow_report(months=12),
         offers_report=build_demo_offers_report(days=180),
+        portfolio_report=build_demo_portfolio_report(),
         mode="demo",
     )
 

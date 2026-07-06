@@ -6,8 +6,10 @@ from decimal import Decimal
 from app.analytics.cashflow_forecast import _add_months, build_monthly_cashflow
 from app.domain.bond_offer import BondOfferEvent, OfferEventType, OfferStatus
 from app.domain.cashflow import CashflowEvent, CashflowSource, CashflowType
+from app.domain.portfolio_all import PortfolioAsset
 from app.reporting.cashflow import CashflowAccountReport, CashflowReport, build_cashflow_report
 from app.reporting.offers import OffersAccountReport, OffersReport, build_offers_report
+from app.reporting.portfolio import PortfolioAccountReport, PortfolioReport, build_portfolio_report
 
 DEMO_AS_OF = date(2026, 7, 1)
 DEMO_GENERATED_AT = datetime(2026, 7, 1, 12, 0, tzinfo=timezone.utc)
@@ -63,6 +65,22 @@ def build_demo_offers_report(
             OffersAccountReport(
                 account_label=DEMO_ACCOUNT_LABEL,
                 offers=offers,
+            )
+        ],
+        generated_at=DEMO_GENERATED_AT,
+    )
+
+
+def build_demo_portfolio_report(
+    *,
+    as_of: date = DEMO_AS_OF,
+) -> PortfolioReport:
+    return build_portfolio_report(
+        as_of=as_of,
+        account_results=[
+            PortfolioAccountReport(
+                account_label=DEMO_ACCOUNT_LABEL,
+                assets=demo_portfolio_assets(),
             )
         ],
         generated_at=DEMO_GENERATED_AT,
@@ -198,6 +216,50 @@ def demo_cashflow_events() -> list[CashflowEvent]:
             payment_total_amount=Decimal("3000.00"),
             payment_currency="RUB",
             source=CashflowSource.ACTUAL,
+        ),
+    ]
+
+
+def demo_portfolio_assets() -> list[PortfolioAsset]:
+    return [
+        PortfolioAsset(
+            account_id=DEMO_ACCOUNT_LABEL,
+            instrument_uid="demo-gov-fixed",
+            figi="DEMOFIGI001",
+            ticker="DGOV",
+            instrument_type="bond",
+            name="Demo Government Fixed Bond",
+            isin="DEMO000001",
+            quantity=Decimal("10"),
+            average_position_price=Decimal("985.00"),
+            current_price=Decimal("1002.50"),
+            price_currency="RUB",
+        ),
+        PortfolioAsset(
+            account_id=DEMO_ACCOUNT_LABEL,
+            instrument_uid="demo-dividend-share",
+            figi="DEMOFIGI003",
+            ticker="DSHR",
+            instrument_type="share",
+            name="Demo Dividend Share",
+            isin="DEMO000003",
+            quantity=Decimal("20"),
+            average_position_price=Decimal("145.00"),
+            current_price=Decimal("152.00"),
+            price_currency="RUB",
+        ),
+        PortfolioAsset(
+            account_id=DEMO_ACCOUNT_LABEL,
+            instrument_uid="demo-usd-bond",
+            figi="DEMOFIGI006",
+            ticker="DUSD",
+            instrument_type="bond",
+            name="Demo USD Bond",
+            isin="DEMO000006",
+            quantity=Decimal("5"),
+            average_position_price=Decimal("900.00"),
+            current_price=Decimal("910.00"),
+            price_currency="RUB",
         ),
     ]
 

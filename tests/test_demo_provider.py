@@ -2,7 +2,7 @@ import json
 from datetime import date
 from decimal import Decimal
 
-from app.demo.provider import DEMO_AS_OF, build_demo_cashflow_report, build_demo_offers_report
+from app.demo.provider import DEMO_AS_OF, build_demo_cashflow_report, build_demo_offers_report, build_demo_portfolio_report
 from app.domain.bond_offer import OfferEventType
 from app.domain.cashflow import CashflowType
 from app.reporting.serializers.cashflow_json import cashflow_report_to_json
@@ -71,3 +71,12 @@ def test_demo_offers_are_deterministic_and_offline() -> None:
     assert first.as_of == DEMO_AS_OF
     assert first.accounts[0].offers[0].event_type == OfferEventType.CALL
     assert first.summary["total_offers"] == 2
+
+
+def test_demo_portfolio_contains_synthetic_assets() -> None:
+    report = build_demo_portfolio_report()
+
+    assert report.as_of == DEMO_AS_OF
+    assert report.summary["asset_count"] == 3
+    assert report.summary["instrument_types"] == {"bond": 2, "share": 1}
+    assert report.accounts[0].assets[0].name == "Demo Government Fixed Bond"

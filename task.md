@@ -1314,8 +1314,8 @@ south-invest report --months 12 --output report/
   `manifest.json`, `summary.json`, cashflow/offers JSON/CSV, `data_quality.json`, `report.html` и SVG-графиками.
 * Demo provider теперь включает synthetic offers для offline report.
 * `docs/methodology.md` добавлен, но методология пока описывает текущий MVP, а не полноценный formula registry.
-* `portfolio.json` и `portfolio.csv` в report package пока являются честным placeholder со статусом `unknown`;
-  полноценный holdings snapshot нужно подключать отдельным этапом.
+* `portfolio.json` и `portfolio.csv` теперь подключены к holdings snapshot для `south-invest report` и к synthetic
+  demo holdings для `south-invest demo report`.
 * `floating_scenarios.json/csv` пока строятся только из текущих floating cashflow events; полноценный экспорт матрицы
   base/stress/up/down ещё не подключён к report package.
 * SVG-графики реализованы без внешних зависимостей и подходят для MVP, но ещё не имеют продвинутой визуальной маркировки
