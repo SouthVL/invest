@@ -325,6 +325,11 @@ def test_demo_report_does_not_call_t_invest_builders(monkeypatch, tmp_path) -> N
     assert code == 0
     assert (tmp_path / "manifest.json").exists()
     assert '"mode": "demo"' in (tmp_path / "manifest.json").read_text(encoding="utf-8")
+    floating_json = (tmp_path / "floating_scenarios.json").read_text(encoding="utf-8")
+    floating_csv = (tmp_path / "floating_scenarios.csv").read_text(encoding="utf-8")
+    assert '"source_status": "actual"' in floating_json
+    assert '"source_status": "estimated"' in floating_json
+    assert "floating: last coupon,estimated" in floating_csv
 
 
 def test_parser_converts_dates() -> None:

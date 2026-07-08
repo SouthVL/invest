@@ -70,6 +70,47 @@ def test_report_package_manifest_and_summary_are_stable(tmp_path) -> None:
     assert "Portfolio holdings snapshot is not included" not in (tmp_path / "portfolio.csv").read_text(encoding="utf-8")
 
 
+def test_report_package_floating_scenarios_include_statuses_and_csv_rows(tmp_path) -> None:
+    write_report_package(
+        output_dir=tmp_path,
+        cashflow_report=build_demo_cashflow_report(months=12),
+        offers_report=build_demo_offers_report(days=180),
+        portfolio_report=build_demo_portfolio_report(),
+        mode="demo",
+        scenario="base",
+    )
+
+    payload = json.loads((tmp_path / "floating_scenarios.json").read_text(encoding="utf-8"))
+    csv_text = (tmp_path / "floating_scenarios.csv").read_text(encoding="utf-8")
+    svg_text = (tmp_path / "charts" / "floating_scenarios.svg").read_text(encoding="utf-8")
+
+    assert payload["report_type"] == "floating_scenarios"
+    assert payload["scenario"] == "base"
+    assert payload["events"] == [
+        {
+            "instrument_name": "Demo Key Rate Floater",
+            "payment_date": "2026-09-15",
+            "scenario": "base",
+            "amount": {"amount": "421.00", "currency": "RUB"},
+            "source": "floating",
+            "source_status": "actual",
+        },
+        {
+            "instrument_name": "Demo Key Rate Floater",
+            "payment_date": "2026-12-15",
+            "scenario": "base",
+            "amount": {"amount": "430.00", "currency": "RUB"},
+            "source": "floating: last coupon",
+            "source_status": "estimated",
+        },
+    ]
+    assert csv_text.splitlines()[0] == "instrument_name,payment_date,scenario,total_amount,currency,source,source_status"
+    assert "Demo Key Rate Floater,2026-09-15,base,421.00,RUB,floating,actual" in csv_text
+    assert "Demo Key Rate Floater,2026-12-15,base,430.00,RUB,floating: last coupon,estimated" in csv_text
+    assert "actual" in svg_text
+    assert "estimated" in svg_text
+
+
 def test_report_package_anonymize_hides_identifiers(tmp_path) -> None:
     write_report_package(
         output_dir=tmp_path,
