@@ -22,6 +22,104 @@ https://github.com/SouthVL/invest
 
 ---
 
+# 0. Как читать этот документ
+
+Этот файл остаётся мастер-документом проекта: в нём есть продуктовый контекст, архитектурная дорожная карта,
+история выполненных этапов и журнал технического долга.
+
+Для ежедневной разработки используй сначала раздел **Рабочий backlog** ниже. Остальные разделы нужны как контекст и
+обоснование требований.
+
+---
+
+# Рабочий backlog
+
+## Done
+
+Уже реализовано и закоммичено:
+
+* публичное имя «Кооператив Юг — Finance Lab» и CLI `south-invest`;
+* единая новая CLI-обвязка `app/interfaces/cli`;
+* будущий cashflow на N месяцев: фиксированные купоны, флоатеры, дивиденды, амортизации, погашения;
+* флаг `--repeat-floating-last-coupon`;
+* FX-пересчёт платежей в валюту отчёта с сохранением исходной валюты платежа;
+* JSON/CSV для `cashflow`;
+* JSON/CSV для `offers`;
+* `south-invest demo cashflow`;
+* `south-invest report`;
+* `south-invest demo report`;
+* report package: `manifest`, `summary`, `portfolio`, `cashflow`, `offers`, `floating_scenarios`,
+  `data_quality`, HTML и SVG;
+* реальные holdings в `portfolio.json/csv` для `south-invest report`;
+* synthetic holdings для `south-invest demo report`;
+* `--anonymize` для account IDs и идентификаторов инструментов;
+* версионированные YAML-сценарии ставок и формулы флоатеров;
+* локальные проверки качества: pytest, Ruff, mypy, demo/report smoke, secret scan;
+* методология и контракт для контент-агента;
+* `.gitignore` для `.env`, SQLite, локальных отчётов и временных файлов.
+
+## Must для v0.1
+
+Эти задачи нужно закрыть перед первым публичным релизом:
+
+1. Проверить `south-invest report --months 12 --output report-real/ --anonymize` на живом read-only токене T-Invest.
+2. Добавить краткий `CHANGELOG.md` для первого релиза.
+3. Явно выбрать лицензию проекта и добавить файл `LICENSE`.
+4. Добавить GitHub topics вручную в настройках репозитория:
+   `bonds`, `portfolio`, `cashflow`, `fixed-income`, `t-invest`, `python`, `financial-analytics`,
+   `investment-tools`.
+5. Проверить README как путь от установки до готового report package на чистом окружении.
+
+## Should для v0.2
+
+Следующие задачи улучшают продукт, но не блокируют первый релиз:
+
+1. Полная матрица флоатеров в report package: `flat`, `base`, `stress` из `app/data/rate_scenarios.yaml`.
+2. Команда `south-invest validate-data`:
+   * проверка YAML-сценариев;
+   * проверка формул флоатеров;
+   * проверка `unknown`/`draft`/`archived`;
+   * проверка report package без обращения к T-Invest.
+3. Schema registry для JSON-контрактов:
+   * `summary.json`;
+   * `portfolio.json`;
+   * `cashflow_monthly.json`;
+   * `cashflow_events.json`;
+   * `offers.json`;
+   * `floating_scenarios.json`;
+   * `data_quality.json`.
+4. Structured errors для JSON/report-команд.
+5. Пользовательские псевдонимы для `--anonymize` через mapping-файл.
+6. Улучшенная визуальная маркировка `actual/forecast/estimated/unknown` в SVG-графиках.
+
+## Later
+
+Крупные архитектурные и продуктовые улучшения:
+
+1. Выделить полноценный provider/ports слой, чтобы `app/application/*` не создавали T-Invest `Client` напрямую.
+2. Постепенно разрезать legacy `app/cli.py` на application/reporting/rendering модули.
+3. Усилить mypy: включить `check_untyped_defs` после локальной типизации критичных модулей.
+4. Усилить Ruff: добавить import sorting, bugbear и upgrade rules отдельным стилевым коммитом.
+5. Вернуть GitHub Actions или другой внешний CI, когда он реально будет использоваться.
+6. Заменить базовый secret scan на gitleaks или trufflehog.
+7. Добавить централизованную sanitation-обработку SDK exceptions, чтобы токены и чувствительные параметры не попадали
+   в traceback/logs.
+8. Перенести demo provider из Python factory в fixture-файлы `portfolio.json`, `instruments.json`, `events.json`.
+9. Добавить machine-enforced проверки для контентного агента: запрет рекомендаций, обязательная дата данных,
+   обязательное разделение `actual` и `forecast`.
+
+## Не делать до v0.1
+
+Чтобы не распылять проект:
+
+* не начинать сайт;
+* не начинать Telegram-бота;
+* не добавлять LLM-интеграцию;
+* не переписывать весь `invest_bonds`/`app` одним refactoring-коммитом;
+* не удалять legacy commands до отдельного решения о совместимости.
+
+---
+
 # 1. Контекст продукта
 
 Проект должен стать техническим ядром медиа «Кооператив Юг».
@@ -1342,10 +1440,10 @@ south-invest report --months 12 --output report/
   версионированные YAML-сценарии.
 * Report package пока не экспортирует полную матрицу всех rate scenarios; это нужно связать отдельной итерацией.
 
-## После этапа 7. CI, качество и безопасность
+## После этапа 7. Локальное качество и безопасность
 
-* Добавлен GitHub Actions workflow `.github/workflows/ci.yml`: Python 3.12, install, Ruff lint, Ruff format check,
-  mypy, pytest, demo cashflow smoke, demo report smoke, secret scan.
+* Добавлены локальные проверки качества: Ruff lint, Ruff format check, mypy, pytest, demo cashflow smoke,
+  demo report smoke, secret scan.
 * В `pyproject.toml` добавлены dev dependencies `ruff`, `mypy`, `types-PyYAML` и минимальные настройки качества.
 * Добавлен `scripts/check_no_secrets.py`, который проверяет tracked files на `.env`, SQLite/DB и явные секретные
   значения.
@@ -1355,8 +1453,7 @@ south-invest report --months 12 --output report/
 * mypy работает в мягком режиме без `check_untyped_defs`; усиление типизации нужно делать постепенно.
 * Secret scan является базовой регулярной проверкой, а не полноценной заменой gitleaks/trufflehog.
 * SDK exceptions всё ещё не проходят отдельную централизованную sanitation-обработку.
-* Report directories не добавлены отдельным шаблоном в `.gitignore`; сейчас локальные CSV/DB/secret files закрыты, но
-  публикационные HTML/JSON отчёты требуют дисциплины пользователя или отдельной политики именования.
+* GitHub Actions workflow удалён из активного репозитория, потому что внешний CI сейчас не используется.
 
 ## После этапа 8. Контракт для контент-агента
 

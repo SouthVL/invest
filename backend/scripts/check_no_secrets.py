@@ -37,7 +37,8 @@ TEXT_SUFFIXES = {
 
 
 def main() -> int:
-    files = tracked_files()
+    root = repository_root()
+    files = tracked_files(root)
     problems: list[str] = []
     for path in files:
         if path.name in BLOCKED_FILENAMES or path.suffix in BLOCKED_SUFFIXES:
@@ -45,7 +46,7 @@ def main() -> int:
             continue
         if path.suffix not in TEXT_SUFFIXES:
             continue
-        text = read_text(path)
+        text = read_text(root / path)
         if text is None:
             continue
         for pattern in SECRET_PATTERNS:
@@ -61,12 +62,23 @@ def main() -> int:
     return 0
 
 
-def tracked_files() -> list[Path]:
+def repository_root() -> Path:
     result = subprocess.run(
-        ["git", "ls-files"],
+        ["git", "rev-parse", "--show-toplevel"],
         check=True,
         text=True,
         stdout=subprocess.PIPE,
+    )
+    return Path(result.stdout.strip())
+
+
+def tracked_files(root: Path) -> list[Path]:
+    result = subprocess.run(
+        ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+        cwd=root,
     )
     return [Path(line) for line in result.stdout.splitlines() if line]
 
@@ -74,6 +86,8 @@ def tracked_files() -> list[Path]:
 def read_text(path: Path) -> str | None:
     try:
         return path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return None
     except UnicodeDecodeError:
         return None
 

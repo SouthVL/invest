@@ -48,7 +48,13 @@ env/
 *.xlsx
 report/
 report-*/
+report-real/
+demo-report/
+demo-report-*/
+demo-cashflow/
+demo-cashflow-*/
 cashflow-csv/
+cashflow/
 
 # External API samples and generated artifacts
 external_api/
