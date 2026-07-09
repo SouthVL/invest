@@ -150,6 +150,26 @@ south-invest --account-id YOUR_ACCOUNT_ID
 
 The app only reads accounts, portfolio, instruments, coupons, and bond events. It does not place or cancel orders.
 
+## Run API
+
+The backend also exposes a minimal FastAPI app for the future web frontend.
+
+Local development:
+
+```bash
+uvicorn app.api.main:app --reload
+```
+
+Initial endpoints:
+
+```text
+GET /health
+GET /api/v1/demo/dashboard
+GET /api/v1/demo/cashflow?months=12
+```
+
+Demo API endpoints are deterministic, offline, and do not require `.env`, a broker token, or network access.
+
 ## Full Portfolio Snapshot
 
 Fetch and store the full current portfolio, not only bonds:
