@@ -1,22 +1,51 @@
 # Frontend
 
-Папка для будущего frontend веб-приложения «Кооператив Юг — Портфель инвестора».
+Next.js frontend for the «Кооператив Юг — Портфель инвестора» web MVP.
 
-Планируемый стек:
+The app currently consumes deterministic demo data from the backend API:
 
-- Next.js;
-- TypeScript strict;
-- TanStack Query;
-- Zod;
-- CSS variables или Tailwind;
-- Recharts/ECharts;
-- MSW для mock API;
-- Vitest, Testing Library и Playwright.
+```text
+GET /api/v1/demo/dashboard
+```
 
-## Границы
+## Development
 
-- Не вызывать T-Invest API напрямую.
-- Не хранить T-Invest token в browser storage.
-- Работать только с внутренними backend DTO.
-- Показывать timestamp, период и freshness status для доходности и макроданных.
-- Не добавлять торговые операции или персональные рекомендации.
+Start backend first:
+
+```bash
+cd ../backend
+uvicorn app.api.main:app --reload
+```
+
+Start frontend:
+
+```bash
+npm run dev
+```
+
+Default URLs:
+
+- Frontend: `http://127.0.0.1:3000`
+- Backend: `http://127.0.0.1:8000`
+
+To point frontend at another backend URL:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000 npm run dev
+```
+
+## Quality
+
+```bash
+npm run lint
+npm run typecheck
+npm test
+```
+
+## Boundaries
+
+- Do not call T-Invest directly.
+- Do not store T-Invest token in browser storage.
+- Work with internal backend DTOs only.
+- Show period, timestamp, and freshness status for yield and macro data.
+- Do not add trading operations or personal buy/sell recommendations.

@@ -35,6 +35,12 @@ dist/
 venv/
 env/
 
+# Node / frontend
+node_modules/
+.next/
+coverage/
+*.tsbuildinfo
+
 # OS/editor files
 .DS_Store
 .idea/
