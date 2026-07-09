@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { Dashboard } from "@/components/dashboard";
-import { connectSession, disconnectSession, getRealDashboard, selectAccount } from "@/lib/api";
+import { connectSession, disconnectSession, getAccounts, getRealDashboard, selectAccount } from "@/lib/api";
 import type { ConnectedAccount, DashboardData } from "@/lib/types";
 
 export function DashboardApp({ initialDashboard }: { initialDashboard: DashboardData }) {
@@ -11,7 +11,34 @@ export function DashboardApp({ initialDashboard }: { initialDashboard: Dashboard
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
   const [token, setToken] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function restoreSession() {
+      try {
+        const restoredAccounts = await getAccounts();
+        const restoredDashboard = await getRealDashboard();
+        if (!isActive) {
+          return;
+        }
+        setAccounts(restoredAccounts.accounts);
+        setDashboard(restoredDashboard);
+      } catch {
+        if (isActive) {
+          setAccounts([]);
+        }
+      }
+    }
+
+    void restoreSession();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   async function handleConnect(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -55,14 +82,14 @@ export function DashboardApp({ initialDashboard }: { initialDashboard: Dashboard
     if (dashboard.mode !== "real") {
       return;
     }
-    setIsBusy(true);
+    setIsRefreshing(true);
     setError(null);
     try {
       setDashboard(await getRealDashboard());
     } catch {
       setError("Не удалось обновить данные.");
     } finally {
-      setIsBusy(false);
+      setIsRefreshing(false);
     }
   }
 
@@ -83,13 +110,14 @@ export function DashboardApp({ initialDashboard }: { initialDashboard: Dashboard
   return (
     <Dashboard
       dashboard={dashboard}
+      isRefreshing={isRefreshing}
       onRefresh={dashboard.mode === "real" ? handleRefresh : undefined}
       sessionPanel={
         <SessionPanel
           accounts={accounts}
           dashboardMode={dashboard.mode}
           error={error}
-          isBusy={isBusy}
+          isBusy={isBusy || isRefreshing}
           token={token}
           onConnect={handleConnect}
           onDisconnect={handleDisconnect}

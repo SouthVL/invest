@@ -7,10 +7,12 @@ const ALLOCATION_COLORS = ["#d8ff3e", "#78a9ff", "#f4c95d", "#68d391", "#a7afb8"
 
 export function Dashboard({
   dashboard,
+  isRefreshing = false,
   onRefresh,
   sessionPanel
 }: {
   dashboard: DashboardData;
+  isRefreshing?: boolean;
   onRefresh?: () => void;
   sessionPanel?: ReactNode;
 }) {
@@ -39,8 +41,15 @@ export function Dashboard({
               {dashboard.portfolio.account_label === "demo_account" ? "Demo" : dashboard.portfolio.account_label}
               <span aria-hidden="true">⌄</span>
             </button>
-            <button className="icon-button" disabled={!onRefresh} type="button" aria-label="Обновить данные" onClick={onRefresh}>
-              ↻
+            <button
+              className="icon-button"
+              disabled={!onRefresh || isRefreshing}
+              type="button"
+              aria-busy={isRefreshing}
+              aria-label="Обновить данные"
+              onClick={onRefresh}
+            >
+              {isRefreshing ? "…" : "↻"}
             </button>
           </div>
         </header>

@@ -48,6 +48,19 @@ export async function selectAccount(accountRef: string): Promise<AccountsRespons
   return (await response.json()) as AccountsResponse;
 }
 
+export async function getAccounts(): Promise<AccountsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/accounts`, {
+    credentials: "include",
+    cache: "no-store"
+  });
+
+  if (!response.ok) {
+    throw new Error(`Accounts request failed with status ${response.status}`);
+  }
+
+  return (await response.json()) as AccountsResponse;
+}
+
 export async function getRealDashboard(): Promise<DashboardData> {
   const response = await fetch(`${API_BASE_URL}/api/v1/portfolio/dashboard`, {
     credentials: "include",
