@@ -1,24 +1,34 @@
 export function DashboardSkeleton() {
   return (
-    <main className="page">
-      <div className="shell">
-        <div className="topbar">
-          <div className="brand">
-            <div className="skeleton skeleton-title" />
-            <div className="skeleton skeleton-line" style={{ width: 220, marginTop: 8 }} />
+    <main className="dashboard-page">
+      <aside className="dashboard-sidebar">
+        <div className="sidebar-brand">
+          <div className="skeleton" style={{ width: 40, height: 40, borderRadius: 10 }} />
+          <div>
+            <div className="skeleton skeleton-line" style={{ width: 108 }} />
+            <div className="skeleton skeleton-line" style={{ width: 58, marginTop: 8 }} />
           </div>
         </div>
-        <section className="hero">
-          <div className="panel">
+      </aside>
+      <section className="dashboard-content">
+        <div className="dashboard-header">
+          <div style={{ width: "100%" }}>
             <div className="skeleton skeleton-title" />
-            <div className="skeleton skeleton-line" style={{ width: "65%", height: 44, marginTop: 24 }} />
+            <div className="skeleton skeleton-line" style={{ width: 180, marginTop: 10 }} />
           </div>
-          <div className="panel">
-            <div className="skeleton skeleton-title" />
-            <div className="skeleton skeleton-line" style={{ width: "85%", marginTop: 24 }} />
+        </div>
+        <section className="summary-grid">
+          <div className="dashboard-card portfolio-summary">
+            <div className="skeleton skeleton-line" style={{ width: 150 }} />
+            <div className="skeleton skeleton-line" style={{ width: "46%", height: 52, marginTop: 24 }} />
+            <div className="skeleton skeleton-line" style={{ width: 220, marginTop: 12 }} />
+          </div>
+          <div className="dashboard-card benchmark-card">
+            <div className="skeleton skeleton-line" style={{ width: 190 }} />
+            <div className="skeleton skeleton-line" style={{ width: 82, height: 36, marginTop: 24 }} />
           </div>
         </section>
-      </div>
+      </section>
     </main>
   );
 }

@@ -30,3 +30,5 @@ class PortfolioSnapshot(BaseModel):
     fetched_at: datetime
     as_of: date
     assets: list[PortfolioAsset] = Field(default_factory=list)
+    total_value: Decimal | None = None
+    total_value_currency: str | None = None

@@ -3,6 +3,8 @@ export type Money = {
   currency: string;
 };
 
+export type DashboardMode = "demo" | "real";
+
 export type PositionPreview = {
   instrument_uid: string;
   ticker: string;
@@ -13,13 +15,13 @@ export type PositionPreview = {
   market_value: Money | null;
 };
 
-export type DemoDashboard = {
+export type DashboardData = {
   schema_version: string;
-  mode: "demo";
+  mode: DashboardMode;
   portfolio: {
     status: string;
     account_label: string;
-    total_value: Money;
+    total_value: Money | null;
     daily_yield: null;
     expected_yield: null;
     updated_at: string;
@@ -41,12 +43,35 @@ export type DemoDashboard = {
     actual_total: Money;
     estimated_total: Money;
     unknown_count: number;
-  };
+  } | null;
   macro: {
     status: "fresh" | "stale" | "unavailable";
-    key_rate: null;
-    inflation_yoy: null;
+    key_rate: string | null;
+    inflation_yoy: string | null;
     updated_at: string | null;
   };
   warnings: string[];
+};
+
+export type DemoDashboard = DashboardData;
+
+export type ConnectedAccount = {
+  ref: string;
+  name: string;
+  type: string;
+  status: string;
+  masked_id: string;
+  selected: boolean;
+};
+
+export type ConnectResponse = {
+  session: {
+    status: "connected";
+    expires_at: string;
+  };
+  accounts: ConnectedAccount[];
+};
+
+export type AccountsResponse = {
+  accounts: ConnectedAccount[];
 };

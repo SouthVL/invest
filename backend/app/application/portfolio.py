@@ -47,6 +47,8 @@ def build_t_invest_portfolio_report(request: PortfolioRequest) -> PortfolioRepor
                     account_label=account_label(index, account, include_account_id=request.include_account_id),
                     account_id=account.id if request.include_account_id else None,
                     assets=snapshot.assets,
+                    total_value=snapshot.total_value,
+                    total_value_currency=snapshot.total_value_currency,
                 )
             )
 

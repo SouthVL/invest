@@ -16,6 +16,8 @@ class PortfolioAccountReport(BaseModel):
     account_label: str
     account_id: str | None = None
     assets: list[PortfolioAsset] = Field(default_factory=list)
+    total_value: Decimal | None = None
+    total_value_currency: str | None = None
 
 
 class PortfolioReport(BaseModel):

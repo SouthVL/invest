@@ -29,6 +29,8 @@ class TInvestPortfolioAllService:
             fetched_at=datetime.now(timezone.utc),
             as_of=as_of,
             assets=assets,
+            total_value=money_to_decimal(getattr(portfolio, "total_amount_portfolio", None)),
+            total_value_currency=money_currency(getattr(portfolio, "total_amount_portfolio", None)),
         )
 
     def _asset_from_position(self, account_id: str, position: Any) -> PortfolioAsset:
