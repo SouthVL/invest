@@ -15,7 +15,7 @@ SESSION_MAX_AGE_SECONDS = 30 * 60
 @dataclass(frozen=True)
 class SessionAccount:
     ref: str
-    account_id: str
+    account_ids: tuple[str, ...]
     name: str
     type: str
     status: str
@@ -37,16 +37,30 @@ _lock = Lock()
 def create_session(*, token: str, accounts: list[AccountSummary]) -> SessionRecord:
     session_id = token_urlsafe(32)
     expires_at = datetime.now(UTC) + timedelta(seconds=SESSION_MAX_AGE_SECONDS)
-    session_accounts = [
+    single_accounts = [
         SessionAccount(
             ref=f"account_{index}",
-            account_id=account.id,
+            account_ids=(account.id,),
             name=account.name,
             type=account.type,
             status=account.status,
         )
         for index, account in enumerate(accounts, start=1)
     ]
+    session_accounts = (
+        [
+            SessionAccount(
+                ref="portfolio_all",
+                account_ids=tuple(account.id for account in accounts),
+                name="Весь портфель",
+                type="aggregate",
+                status="mixed",
+            )
+        ]
+        if len(single_accounts) > 1
+        else []
+    )
+    session_accounts.extend(single_accounts)
     record = SessionRecord(
         session_id=session_id,
         token=token,
@@ -94,6 +108,15 @@ def selected_account(record: SessionRecord) -> SessionAccount | None:
     return get_account(record, record.selected_account_ref)
 
 
+def selected_accounts(record: SessionRecord) -> list[SessionAccount]:
+    account = selected_account(record)
+    if account is None:
+        return []
+    if account.ref != "portfolio_all":
+        return [account]
+    return [session_account for session_account in record.accounts if session_account.ref != "portfolio_all"]
+
+
 def get_account(record: SessionRecord, account_ref: str) -> SessionAccount | None:
     return next((account for account in record.accounts if account.ref == account_ref), None)
 
@@ -105,11 +128,17 @@ def public_accounts(record: SessionRecord) -> list[dict[str, Any]]:
             "name": account.name or "Brokerage account",
             "type": account.type,
             "status": account.status,
-            "masked_id": mask_account_id(account.account_id),
+            "masked_id": masked_account_label(account),
             "selected": account.ref == record.selected_account_ref,
         }
         for account in record.accounts
     ]
+
+
+def masked_account_label(account: SessionAccount) -> str:
+    if account.ref == "portfolio_all":
+        return f"{len(account.account_ids)} счета"
+    return mask_account_id(account.account_ids[0])
 
 
 def mask_account_id(account_id: str) -> str:
