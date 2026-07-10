@@ -1,9 +1,14 @@
 import type { AccountsResponse, ConnectResponse, DashboardData } from "@/lib/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+const PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+const SERVER_API_BASE_URL = process.env.INTERNAL_API_BASE_URL ?? PUBLIC_API_BASE_URL;
+
+function apiBaseUrl(): string {
+  return typeof window === "undefined" ? SERVER_API_BASE_URL : PUBLIC_API_BASE_URL;
+}
 
 export async function getDemoDashboard(): Promise<DashboardData> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/demo/dashboard`, {
+  const response = await fetch(`${apiBaseUrl()}/api/v1/demo/dashboard`, {
     cache: "no-store"
   });
 
@@ -15,7 +20,7 @@ export async function getDemoDashboard(): Promise<DashboardData> {
 }
 
 export async function connectSession(token: string): Promise<ConnectResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/session/connect`, {
+  const response = await fetch(`${apiBaseUrl()}/api/v1/session/connect`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -32,7 +37,7 @@ export async function connectSession(token: string): Promise<ConnectResponse> {
 }
 
 export async function selectAccount(accountRef: string): Promise<AccountsResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/accounts/select`, {
+  const response = await fetch(`${apiBaseUrl()}/api/v1/accounts/select`, {
     method: "POST",
     credentials: "include",
     headers: {
@@ -49,7 +54,7 @@ export async function selectAccount(accountRef: string): Promise<AccountsRespons
 }
 
 export async function getAccounts(): Promise<AccountsResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/accounts`, {
+  const response = await fetch(`${apiBaseUrl()}/api/v1/accounts`, {
     credentials: "include",
     cache: "no-store"
   });
@@ -62,7 +67,7 @@ export async function getAccounts(): Promise<AccountsResponse> {
 }
 
 export async function getRealDashboard(): Promise<DashboardData> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/portfolio/dashboard`, {
+  const response = await fetch(`${apiBaseUrl()}/api/v1/portfolio/dashboard`, {
     credentials: "include",
     cache: "no-store"
   });
@@ -75,7 +80,7 @@ export async function getRealDashboard(): Promise<DashboardData> {
 }
 
 export async function disconnectSession(): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/session/disconnect`, {
+  const response = await fetch(`${apiBaseUrl()}/api/v1/session/disconnect`, {
     method: "POST",
     credentials: "include"
   });
