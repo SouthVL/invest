@@ -111,14 +111,22 @@ button {
 
 .sidebar-link {
   position: relative;
+  display: flex;
+  align-items: center;
   min-height: 40px;
   border: 1px solid transparent;
   border-radius: 8px;
   padding: 0 16px;
   background: transparent;
   color: var(--text-muted);
+  text-decoration: none;
   text-align: left;
   cursor: pointer;
+}
+
+.sidebar-link:disabled {
+  color: var(--text-subtle);
+  cursor: not-allowed;
 }
 
 .sidebar-link[data-active="true"] {
@@ -222,8 +230,15 @@ button {
 
 .dashboard-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: min(680px, 58vw);
+}
+
+.header-session {
+  min-width: min(360px, 44vw);
 }
 
 .account-button,
@@ -267,11 +282,15 @@ button {
 .session-panel {
   display: grid;
   gap: 12px;
-  margin-top: auto;
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px;
   background: var(--surface);
+}
+
+.header-session .session-panel {
+  gap: 8px;
+  padding: 10px;
 }
 
 .token-form {
@@ -279,12 +298,28 @@ button {
   gap: 8px;
 }
 
-.token-form label {
+.account-select-field {
+  display: grid;
+  gap: 6px;
+}
+
+.header-session .token-form {
+  grid-template-columns: minmax(180px, 1fr) auto;
+  align-items: end;
+}
+
+.token-form label,
+.account-select-field label {
   color: var(--text-subtle);
   font-size: 11px;
 }
 
-.token-form input {
+.header-session .token-form label {
+  grid-column: 1 / -1;
+}
+
+.token-form input,
+.account-select-field select {
   width: 100%;
   min-height: 38px;
   border: 1px solid var(--border);
@@ -292,6 +327,16 @@ button {
   padding: 0 10px;
   background: var(--surface-raised);
   color: var(--text);
+}
+
+.account-select-field select {
+  min-width: min(320px, 42vw);
+  cursor: pointer;
+}
+
+.account-select-field select:disabled {
+  color: var(--text-subtle);
+  cursor: not-allowed;
 }
 
 .token-form button,
@@ -315,8 +360,7 @@ button {
 }
 
 .token-form button:disabled,
-.disconnect-button:disabled,
-.account-option:disabled {
+.disconnect-button:disabled {
   cursor: not-allowed;
   opacity: 0.65;
 }
@@ -324,6 +368,11 @@ button {
 .account-list {
   display: grid;
   gap: 8px;
+}
+
+.header-session .account-list {
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  max-width: 420px;
 }
 
 .account-option {
@@ -339,6 +388,11 @@ button {
   cursor: pointer;
 }
 
+.header-session .account-option {
+  min-height: 46px;
+  padding: 8px 10px;
+}
+
 .account-option[data-active="true"] {
   border-color: var(--accent);
 }
@@ -348,9 +402,28 @@ button {
 }
 
 .account-option span,
+.session-notice,
 .session-error {
   color: var(--text-subtle);
   font-size: 11px;
+}
+
+.session-notice {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: var(--surface-raised);
+  line-height: 1.45;
+}
+
+.session-notice[data-tone="warning"] {
+  border-color: rgba(244, 201, 93, 0.45);
+  color: var(--warning);
+}
+
+.session-notice[data-tone="info"] {
+  color: var(--text-muted);
 }
 
 .session-error {
@@ -375,7 +448,7 @@ button {
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(160px, 180px);
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
   gap: 16px;
   margin-top: 16px;
 }
@@ -707,14 +780,95 @@ button {
   padding: 18px 20px 4px;
 }
 
-.positions-card header button {
+.positions-card header p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.positions-card header button,
+.positions-card header a {
   border: 0;
   padding: 0;
   background: transparent;
   color: var(--accent);
   font-size: 13px;
   font-weight: 700;
+  text-decoration: none;
   cursor: pointer;
+}
+
+.positions-page-header {
+  margin-bottom: 0;
+}
+
+.full-positions-card {
+  margin-top: 0;
+}
+
+.positions-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.segmented-control {
+  display: inline-flex;
+  min-height: 36px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+
+.segmented-control button {
+  min-width: 92px;
+  border: 0;
+  border-right: 1px solid var(--border);
+  padding: 0 12px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.segmented-control button:last-child {
+  border-right: 0;
+}
+
+.segmented-control button[data-active="true"] {
+  background: var(--accent);
+  color: var(--bg);
+  font-weight: 700;
+}
+
+.sort-select {
+  display: grid;
+  gap: 5px;
+  color: var(--text-subtle);
+  font-size: 11px;
+}
+
+.sort-select select {
+  min-height: 36px;
+  min-width: 150px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+
+.positions-state {
+  padding: 28px 20px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.positions-state[data-tone="error"] {
+  color: var(--danger);
 }
 
 .positions-scroll {
@@ -939,12 +1093,45 @@ tr:last-child td {
     flex-direction: column;
   }
 
+  .positions-toolbar {
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+
+  .segmented-control,
+  .sort-select select {
+    width: 100%;
+  }
+
+  .segmented-control button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dashboard-actions {
+    max-width: none;
+    width: 100%;
+  }
+
+  .header-session {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .header-session .token-form {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-header h1 {
     font-size: 25px;
   }
 
   .account-button {
     width: 100%;
+  }
+
+  .account-select-field select {
+    min-width: 0;
   }
 
   .icon-button {

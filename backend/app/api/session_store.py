@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from secrets import token_urlsafe
 from threading import Lock
-from typing import Any
+from typing import Any, Literal
 
 from invest_bonds.models import AccountSummary
 
@@ -28,6 +28,12 @@ class SessionRecord:
     accounts: list[SessionAccount]
     selected_account_ref: str | None
     expires_at: datetime
+
+
+@dataclass(frozen=True)
+class SessionLookup:
+    status: Literal["connected", "expired", "missing"]
+    record: SessionRecord | None = None
 
 
 _sessions: dict[str, SessionRecord] = {}
@@ -74,16 +80,21 @@ def create_session(*, token: str, accounts: list[AccountSummary]) -> SessionReco
 
 
 def get_session(session_id: str | None) -> SessionRecord | None:
+    lookup = lookup_session(session_id)
+    return lookup.record if lookup.status == "connected" else None
+
+
+def lookup_session(session_id: str | None) -> SessionLookup:
     if not session_id:
-        return None
+        return SessionLookup(status="missing")
     with _lock:
         record = _sessions.get(session_id)
         if record is None:
-            return None
+            return SessionLookup(status="missing")
         if record.expires_at <= datetime.now(UTC):
             del _sessions[session_id]
-            return None
-        return record
+            return SessionLookup(status="expired")
+        return SessionLookup(status="connected", record=record)
 
 
 def delete_session(session_id: str | None) -> None:

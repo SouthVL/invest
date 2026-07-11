@@ -11,8 +11,10 @@ from app.api.session_store import (
     create_session,
     delete_session,
     get_session,
+    lookup_session,
     public_accounts,
     select_account,
+    selected_account,
 )
 from invest_bonds.adapter import TInvestAdapter
 
@@ -59,6 +61,35 @@ def connect_session(request: ConnectRequest, response: Response) -> dict[str, An
             "expires_at": record.expires_at.isoformat().replace("+00:00", "Z"),
         },
         "accounts": public_accounts(record),
+    }
+
+
+@router.get("/session/status")
+def session_status(session_id: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME)) -> dict[str, Any]:
+    lookup = lookup_session(session_id)
+    if lookup.status != "connected" or lookup.record is None:
+        return {
+            "session": {
+                "status": lookup.status,
+                "expires_at": None,
+                "selected_account": None,
+            },
+            "accounts": [],
+        }
+
+    account = selected_account(lookup.record)
+    return {
+        "session": {
+            "status": "connected",
+            "expires_at": lookup.record.expires_at.isoformat().replace("+00:00", "Z"),
+            "selected_account": {
+                "ref": account.ref,
+                "name": account.name or "Brokerage account",
+            }
+            if account is not None
+            else None,
+        },
+        "accounts": public_accounts(lookup.record),
     }
 
 

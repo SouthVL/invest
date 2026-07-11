@@ -36,6 +36,17 @@ To point frontend at another backend URL:
 NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000 npm run dev
 ```
 
+## Docker Development
+
+From the repository root:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+The container uses `npm run dev:docker`, which binds Next.js to `0.0.0.0` so it is reachable through
+`http://127.0.0.1:3000`.
+
 For containerized production mode, Next.js can use separate API URLs:
 
 ```bash

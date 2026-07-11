@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.demo import router as demo_router
 from app.api.routes.health import router as health_router
+from app.api.routes.income import router as income_router
+from app.api.routes.macro import router as macro_router
 from app.api.routes.portfolio import router as portfolio_router
 from app.api.routes.session import router as session_router
 
@@ -24,6 +26,8 @@ def create_app() -> FastAPI:
     )
     app.include_router(health_router)
     app.include_router(demo_router, prefix="/api/v1/demo", tags=["demo"])
+    app.include_router(macro_router, prefix="/api/v1", tags=["macro"])
+    app.include_router(income_router, prefix="/api/v1", tags=["income"])
     app.include_router(session_router, prefix="/api/v1", tags=["session"])
     app.include_router(portfolio_router, prefix="/api/v1", tags=["portfolio"])
     return app

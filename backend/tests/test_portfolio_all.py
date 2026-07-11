@@ -1,9 +1,11 @@
 from datetime import date, datetime, timezone
 from decimal import Decimal
 import sqlite3
+from types import SimpleNamespace
 
 from rich.console import Console
 
+from app.t_invest.portfolio_all import TInvestPortfolioAllService, normalize_instrument_type
 from app.cli import combine_portfolio_assets, render_portfolio_assets
 from app.domain.portfolio_all import PortfolioAsset, PortfolioSnapshot
 from app.storage.portfolio_all import PortfolioAllRepository
@@ -70,3 +72,43 @@ def test_combine_portfolio_assets_sums_quantity_by_name_and_isin() -> None:
 
     assert len(combined) == 1
     assert combined[0].quantity == Decimal("15")
+
+
+def test_tinvest_portfolio_asset_normalizes_instrument_kind() -> None:
+    from t_tech.invest.schemas import InstrumentType
+
+    service = TInvestPortfolioAllService(client=SimpleNamespace())
+    position = SimpleNamespace(
+        figi="SHAREFIGI",
+        instrument_uid="share-uid",
+        position_uid="",
+        ticker="SHARE",
+        instrument_type="bond",
+        quantity=SimpleNamespace(units=3, nano=0),
+        average_position_price=SimpleNamespace(units=10, nano=0, currency="RUB"),
+        current_price=SimpleNamespace(units=12, nano=0, currency="RUB"),
+    )
+    instrument = SimpleNamespace(
+        uid="share-uid",
+        position_uid="position-share",
+        figi="SHAREFIGI",
+        ticker="SHARE",
+        instrument_kind=InstrumentType.INSTRUMENT_TYPE_SHARE,
+        instrument_type="share",
+        name="Share",
+        isin="RU000SHARE",
+    )
+    service._instrument = lambda _: instrument  # type: ignore[assignment]
+
+    asset = service._asset_from_position("account-1", position)
+
+    assert asset.instrument_type == "share"
+
+
+def test_normalize_instrument_type_accepts_tinvest_aliases() -> None:
+    from t_tech.invest.schemas import InstrumentType
+
+    assert normalize_instrument_type(InstrumentType.INSTRUMENT_TYPE_BOND) == "bond"
+    assert normalize_instrument_type("INSTRUMENT_TYPE_SHARE") == "share"
+    assert normalize_instrument_type("Stock") == "share"
+    assert normalize_instrument_type("INSTRUMENT_TYPE_UNSPECIFIED", "bond") == "bond"

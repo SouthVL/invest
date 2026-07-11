@@ -34,7 +34,17 @@ backend стороне.
 
 ## Docker Compose
 
-Локально можно поднять backend и frontend в контейнерах:
+Подробная workspace-инструкция: `../doc/development/docker-local-run.md`.
+
+Перед запуском контейнеров останови локальные процессы, которые занимают `3000`, `8000` или `5432`.
+
+Development-режим с hot reload:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Production-like режим:
 
 ```bash
 docker compose up --build
@@ -45,8 +55,9 @@ docker compose up --build
 - Frontend: `http://127.0.0.1:3000`
 - Backend API: `http://127.0.0.1:8000`
 - Healthcheck: `http://127.0.0.1:8000/health`
+- PostgreSQL: `db:5432` внутри Docker-сети
 
-В контейнерном режиме frontend использует два адреса API:
+В обоих режимах frontend использует два адреса API:
 
 - `INTERNAL_API_BASE_URL=http://api:8000` — для server-side запросов Next.js внутри Docker-сети.
 - `NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000` — для запросов браузера к опубликованному backend.
@@ -54,13 +65,21 @@ docker compose up --build
 Для остановки:
 
 ```bash
+docker compose -f docker-compose.dev.yml down
 docker compose down
+```
+
+Применить backend migrations:
+
+```bash
+docker compose -f docker-compose.dev.yml run --rm api alembic upgrade head
 ```
 
 ## Repository Files
 
 - `.gitignore` — общие ignore-правила репозитория.
-- `docker-compose.yml` — локальный запуск `api` + `web`.
+- `docker-compose.yml` — production-like запуск `db` + `api` + `web`.
+- `docker-compose.dev.yml` — development запуск `db` + backend/frontend с hot reload.
 - `LICENSE` — лицензия проекта.
 - `backend/README.md` — подробная документация текущего Python backend/CLI.
 - `backend/CHANGELOG.md` — история релизов backend/CLI.

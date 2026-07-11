@@ -38,12 +38,13 @@ def build_portfolio_report(
     as_of: date,
     account_results: list[PortfolioAccountReport],
     generated_at: datetime | None = None,
+    warnings: list[str] | None = None,
 ) -> PortfolioReport:
     assets = [asset for account in account_results for asset in account.assets]
     unknown_price_count = sum(1 for asset in assets if asset.current_price is None)
-    warnings = []
+    report_warnings = list(warnings or [])
     if unknown_price_count:
-        warnings.append("Some portfolio assets do not have current price data.")
+        report_warnings.append("Some portfolio assets do not have current price data.")
 
     return PortfolioReport(
         generated_at=generated_at or datetime.now(timezone.utc),
@@ -56,7 +57,7 @@ def build_portfolio_report(
             "market_value_by_currency": market_value_by_currency(assets),
             "unknown_price_count": unknown_price_count,
         },
-        warnings=warnings,
+        warnings=report_warnings,
         data_quality={
             "account_count": len(account_results),
             "asset_count": len(assets),

@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 import type { DashboardData, Money, PositionPreview } from "@/lib/types";
-import { formatMoney, formatPercent } from "@/lib/format";
+import { formatMoney, formatPercent, formatReadableDate } from "@/lib/format";
 
 const ALLOCATION_COLORS = ["#d8ff3e", "#78a9ff", "#f4c95d", "#68d391", "#a7afb8"];
 
@@ -25,7 +26,6 @@ export function Dashboard({
       <Sidebar
         accountLabel={dashboard.portfolio.account_label}
         mode={dashboard.mode}
-        sessionPanel={sessionPanel}
         status={dashboard.portfolio.status}
       />
 
@@ -37,6 +37,7 @@ export function Dashboard({
           </div>
 
           <div className="dashboard-actions">
+            {sessionPanel ? <div className="header-session">{sessionPanel}</div> : null}
             <button className="account-button" type="button" aria-label="Выбрать брокерский счет">
               {dashboard.portfolio.account_label === "demo_account" ? "Demo" : dashboard.portfolio.account_label}
               <span aria-hidden="true">⌄</span>
@@ -54,14 +55,25 @@ export function Dashboard({
           </div>
         </header>
 
-        <section className="summary-grid" aria-label="Краткая сводка">
+        <section className="summary-grid" id="overview" aria-label="Краткая сводка">
           <PortfolioSummary totalValue={dashboard.portfolio.total_value} />
           <BenchmarkCard dashboard={dashboard} />
         </section>
 
         <section className="kpi-grid" aria-label="Ключевые показатели">
-          <KpiCard label="Ключевая ставка" value={formatPercent(dashboard.macro.key_rate)} note={macroNote(dashboard)} tone="info" />
-          <KpiCard label="Инфляция" value={formatPercent(dashboard.macro.inflation_yoy)} note={macroNote(dashboard)} tone="info" />
+          <KpiCard
+            label="Ключевая ставка"
+            value={formatPercent(dashboard.macro.key_rate)}
+            note={macroIndicatorNote(dashboard, "key_rate")}
+            tone="info"
+          />
+          <KpiCard label="RUONIA" value={formatPercent(dashboard.macro.ruonia ?? null)} note={macroIndicatorNote(dashboard, "ruonia")} tone="info" />
+          <KpiCard
+            label="Инфляция YoY"
+            value={formatPercent(dashboard.macro.inflation_yoy)}
+            note={macroIndicatorNote(dashboard, "inflation")}
+            tone="info"
+          />
           <KpiCard label="Ожидаемая доходность" value="нет данных" note={`Период: ${dashboard.portfolio.period}`} tone="info" />
           <KpiCard label="Доходность за день" value="нет данных" note={`Период: ${dashboard.portfolio.period}`} tone="info" compact />
         </section>
@@ -95,15 +107,19 @@ export function Dashboard({
 function Sidebar({
   accountLabel,
   mode,
-  sessionPanel,
   status
 }: {
   accountLabel: string;
   mode: DashboardData["mode"];
-  sessionPanel?: ReactNode;
   status: string;
 }) {
-  const items = ["Обзор", "Позиции", "Доходы · скоро", "Риски · скоро", "Настройки"];
+  const items = [
+    { label: "Обзор", href: "#overview", disabled: false },
+    { label: "Позиции", href: "/positions", disabled: false },
+    { label: "Доходы · скоро", href: "", disabled: true },
+    { label: "Риски · скоро", href: "", disabled: true },
+    { label: "Настройки", href: "", disabled: true }
+  ];
 
   return (
     <aside className="dashboard-sidebar" aria-label="Навигация">
@@ -118,24 +134,28 @@ function Sidebar({
       <nav className="sidebar-nav">
         <p>НАВИГАЦИЯ</p>
         {items.map((item, index) => (
-          <button className="sidebar-link" data-active={index === 0 ? "true" : undefined} type="button" key={item}>
-            {item}
-          </button>
+          item.disabled ? (
+            <button className="sidebar-link" disabled type="button" key={item.label}>
+              {item.label}
+            </button>
+          ) : (
+            <Link className="sidebar-link" data-active={index === 0 ? "true" : undefined} href={item.href} key={item.label}>
+              {item.label}
+            </Link>
+          )
         ))}
       </nav>
 
-      {sessionPanel ?? (
-        <div className="connection-card">
-          <span className="connection-pill" data-mode={mode}>
-            {mode === "real" ? "Real API" : "Demo"}
-          </span>
-          <p>Брокерский счёт</p>
-          <div>
-            <strong>{accountLabel === "demo_account" ? "Demo" : accountLabel}</strong>
-          </div>
-          <small>{status}</small>
+      <div className="connection-card">
+        <span className="connection-pill" data-mode={mode}>
+          {mode === "real" ? "Real API" : "Demo"}
+        </span>
+        <p>Брокерский счёт</p>
+        <div>
+          <strong>{accountLabel === "demo_account" ? "Demo" : accountLabel}</strong>
         </div>
-      )}
+        <small>{status}</small>
+      </div>
     </aside>
   );
 }
@@ -179,6 +199,10 @@ function BenchmarkCard({ dashboard }: { dashboard: DashboardData }) {
         <div>
           <dt>Ключевая ставка</dt>
           <dd>{formatPercent(dashboard.macro.key_rate)}</dd>
+        </div>
+        <div>
+          <dt>RUONIA</dt>
+          <dd>{formatPercent(dashboard.macro.ruonia ?? null)}</dd>
         </div>
       </dl>
       <p className="benchmark-insight">{macroNote(dashboard)}</p>
@@ -294,10 +318,15 @@ function RiskLine({ label, value, note, tone }: { label: string; value: string; 
 
 function PositionsTable({ positions, totalValue }: { positions: PositionPreview[]; totalValue: number | null }) {
   return (
-    <section className="dashboard-card positions-card">
+    <section className="dashboard-card positions-card" id="positions" tabIndex={-1}>
       <header>
-        <h2>Крупнейшие позиции</h2>
-        <button type="button">Все позиции →</button>
+        <div>
+          <h2>Позиции</h2>
+          <p>Крупнейшие позиции портфеля</p>
+        </div>
+        <Link href="/positions">
+          Все позиции →
+        </Link>
       </header>
 
       <div className="positions-scroll">
@@ -501,7 +530,58 @@ function formatDashboardTimestamp(value: string) {
 
 function macroNote(dashboard: DashboardData): string {
   if (dashboard.macro.updated_at) {
-    return `Обновлено ${formatDashboardTimestamp(dashboard.macro.updated_at)}`;
+    return `Макроданные: ${macroStatusLabel(dashboard.macro.status)} · обновлено ${formatDashboardTimestamp(dashboard.macro.updated_at)}`;
   }
   return `Макроданные недоступны · период ${dashboard.portfolio.period}`;
+}
+
+function macroIndicatorNote(dashboard: DashboardData, indicator: "key_rate" | "ruonia" | "inflation"): string {
+  if (indicator === "key_rate") {
+    return macroPeriodNote("Период", dashboard.macro.key_rate_period, dashboard.macro.key_rate_updated_at, dashboard.macro.key_rate_quality);
+  }
+  if (indicator === "ruonia") {
+    return macroPeriodNote("Ставка за", dashboard.macro.ruonia_period, dashboard.macro.ruonia_updated_at, dashboard.macro.ruonia_quality);
+  }
+  return macroPeriodNote(
+    "Период",
+    dashboard.macro.inflation_period ? formatMacroMonth(dashboard.macro.inflation_period) : null,
+    dashboard.macro.inflation_updated_at,
+    dashboard.macro.inflation_quality
+  );
+}
+
+function macroPeriodNote(label: string, period: string | null | undefined, updatedAt: string | null | undefined, quality: string | null | undefined) {
+  if (!period || !updatedAt) {
+    return "Период и timestamp недоступны";
+  }
+  const displayPeriod = period.includes("-") && period.length === 10 ? formatReadableDate(period) : period;
+  return `${label}: ${displayPeriod} · обновлено ${formatDashboardTimestamp(updatedAt)}${qualityLabel(quality)}`;
+}
+
+function formatMacroMonth(value: string): string {
+  const [year, month] = value.split("-");
+  if (!year || !month) {
+    return value;
+  }
+  return `${month}.${year}`;
+}
+
+function macroStatusLabel(status: DashboardData["macro"]["status"]): string {
+  const labels = {
+    fresh: "актуальны",
+    partial: "частично доступны",
+    stale: "устарели",
+    unavailable: "недоступны"
+  };
+  return labels[status] ?? status;
+}
+
+function qualityLabel(quality: string | null | undefined): string {
+  if (quality === "cached") {
+    return " · кэш";
+  }
+  if (quality === "stale") {
+    return " · устарело";
+  }
+  return "";
 }

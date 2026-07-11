@@ -170,6 +170,37 @@ GET /api/v1/demo/cashflow?months=12
 
 Demo API endpoints are deterministic, offline, and do not require `.env`, a broker token, or network access.
 
+## PostgreSQL Foundation
+
+The web API uses PostgreSQL for persisted investment data. Local and Docker environments read the connection string
+from `DATABASE_URL`.
+
+Docker development default:
+
+```text
+postgresql+psycopg://south_invest:south_invest_dev@db:5432/south_invest
+```
+
+Local host default:
+
+```text
+postgresql+psycopg://south_invest:south_invest_dev@127.0.0.1:5432/south_invest
+```
+
+Run migrations from `invest/backend`:
+
+```bash
+alembic upgrade head
+```
+
+Or from the repository root with Docker:
+
+```bash
+docker compose -f docker-compose.dev.yml run --rm api alembic upgrade head
+```
+
+Do not put real database passwords or broker tokens into committed compose files.
+
 ## Full Portfolio Snapshot
 
 Fetch and store the full current portfolio, not only bonds:
